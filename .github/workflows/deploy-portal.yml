@@ -1,11 +1,8 @@
-name: Deploy Organizer Portal to GitHub Pages
+name: Deploy UniServ to GitHub Pages
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'UniServ-Organizer/**'
-      - '.github/workflows/deploy-portal.yml'
   workflow_dispatch:
 
 permissions:
@@ -18,17 +15,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject Firebase config into firebase-data.js
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ── Inject Firebase config into Organizer Portal ──────────
+      - name: Inject Firebase config into Organizer Portal
         run: |
           sed -i \
             -e "s|'YOUR_API_KEY'|'${{ secrets.FIREBASE_API_KEY }}'|g" \
@@ -39,14 +39,138 @@ jobs:
             -e "s|'YOUR_ORGANIZER_APP_ID'|'${{ secrets.FIREBASE_ORGANIZER_APP_ID }}'|g" \
             UniServ-Organizer/js/firebase-data.js
 
+      # ── Inject Firebase config into Worker App ────────────────
+      - name: Inject Firebase config into Worker App
+        run: |
+          sed -i \
+            -e "s|'YOUR_API_KEY'|'${{ secrets.FIREBASE_API_KEY }}'|g" \
+            -e "s|YOUR_PROJECT_ID\.firebaseapp\.com|${{ secrets.FIREBASE_PROJECT_ID }}.firebaseapp.com|g" \
+            -e "s|'YOUR_PROJECT_ID'|'${{ secrets.FIREBASE_PROJECT_ID }}'|g" \
+            -e "s|YOUR_PROJECT_ID\.appspot\.com|${{ secrets.FIREBASE_PROJECT_ID }}.appspot.com|g" \
+            -e "s|'YOUR_MESSAGING_SENDER_ID'|'${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}'|g" \
+            -e "s|'YOUR_WORKER_APP_ID'|'${{ secrets.FIREBASE_WORKER_APP_ID }}'|g" \
+            UniServ-Worker/src/firebase/firebase.js
+
+      # ── Inject Firebase config into User App ─────────────────
+      - name: Inject Firebase config into User App
+        run: |
+          sed -i \
+            -e "s|'YOUR_API_KEY'|'${{ secrets.FIREBASE_API_KEY }}'|g" \
+            -e "s|YOUR_PROJECT_ID\.firebaseapp\.com|${{ secrets.FIREBASE_PROJECT_ID }}.firebaseapp.com|g" \
+            -e "s|'YOUR_PROJECT_ID'|'${{ secrets.FIREBASE_PROJECT_ID }}'|g" \
+            -e "s|YOUR_PROJECT_ID\.appspot\.com|${{ secrets.FIREBASE_PROJECT_ID }}.appspot.com|g" \
+            -e "s|'YOUR_MESSAGING_SENDER_ID'|'${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}'|g" \
+            -e "s|'YOUR_APP_ID'|'${{ secrets.FIREBASE_USER_APP_ID }}'|g" \
+            UniServ/UniServ/src/firebase/firebase.js
+
+      # ── Build Worker App (Expo web) ───────────────────────────
+      - name: Install Worker App dependencies
+        working-directory: UniServ-Worker
+        run: npm install --legacy-peer-deps
+
+      - name: Build Worker App for web
+        working-directory: UniServ-Worker
+        run: npx expo export --platform web --output-dir dist
+        env:
+          NODE_ENV: production
+
+      # ── Build User App (Expo web) ─────────────────────────────
+      - name: Install User App dependencies
+        working-directory: UniServ/UniServ
+        run: npm install --legacy-peer-deps
+
+      - name: Build User App for web
+        working-directory: UniServ/UniServ
+        run: npx expo export --platform web --output-dir dist
+        env:
+          NODE_ENV: production
+
+      # ── Assemble final site ───────────────────────────────────
+      - name: Assemble deployment folder
+        run: |
+          mkdir -p _site/worker
+          mkdir -p _site/app
+          # Organizer Portal at root
+          cp -r UniServ-Organizer/. _site/
+          # Worker App at /worker/
+          cp -r UniServ-Worker/dist/. _site/worker/
+          # User App at /app/
+          cp -r UniServ/UniServ/dist/. _site/app/
+          # Landing index that links to all three
+          cat > _site/index.html << 'LANDING'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>UniServ — SIH 2026</title>
+            <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2rem; padding: 2rem; }
+              h1 { font-size: 2.5rem; font-weight: 800; }
+              h1 span { color: #3b82f6; }
+              p { color: #94a3b8; font-size: 1.1rem; }
+              .cards { display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; margin-top: 1rem; }
+              .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2rem; width: 240px; text-align: center; text-decoration: none; color: inherit; transition: transform .2s, border-color .2s; }
+              .card:hover { transform: translateY(-4px); border-color: #3b82f6; }
+              .icon { font-size: 2.5rem; margin-bottom: 1rem; }
+              .card h2 { font-size: 1.2rem; margin-bottom: .5rem; }
+              .card p { font-size: .9rem; color: #64748b; }
+              .badge { display: inline-block; margin-top: .75rem; padding: .25rem .75rem; background: #1d4ed8; border-radius: 99px; font-size: .75rem; font-weight: 700; }
+            </style>
+          </head>
+          <body>
+            <div style="text-align:center">
+              <h1>Uni<span>Serv</span></h1>
+              <p>Smart India Hackathon 2026 — Problem Statement #26089</p>
+            </div>
+            <div class="cards">
+              <a class="card" href="organizer/index.html">
+                <div class="icon">🏢</div>
+                <h2>Organizer Portal</h2>
+                <p>Manage workers, KYC, assessments &amp; bookings</p>
+                <span class="badge">Web Dashboard</span>
+              </a>
+              <a class="card" href="worker/">
+                <div class="icon">👷</div>
+                <h2>Worker App</h2>
+                <p>Job dispatch, GPS tracking &amp; earnings</p>
+                <span class="badge">Progressive Web App</span>
+              </a>
+              <a class="card" href="app/">
+                <div class="icon">📱</div>
+                <h2>User App</h2>
+                <p>Book services, track workers &amp; pay</p>
+                <span class="badge">Progressive Web App</span>
+              </a>
+            </div>
+          </body>
+          </html>
+          LANDING
+          # Move organizer to subfolder, root is now the landing page
+          mkdir -p _site/organizer
+          for f in analytics.html assessment.html assessment-review.html bookings.html community.html complaints.html dashboard.html heatmap.html verification.html workers.html; do
+            [ -f "_site/$f" ] && mv "_site/$f" "_site/organizer/$f"
+          done
+          cp -r UniServ-Organizer/js _site/organizer/js 2>/dev/null || true
+          cp -r UniServ-Organizer/css _site/organizer/css 2>/dev/null || true
+          cp UniServ-Organizer/index.html _site/organizer/index.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: UniServ-Organizer
+          path: _site
 
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
