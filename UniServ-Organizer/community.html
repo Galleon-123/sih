@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bulk Projects — UniServ Organizer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/custom.css"/>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="js/firebase-data.js"></script>
+</head>
+<body>
+<div style="display:flex;min-height:100vh;">
+  <aside id="sidebar" style="display:flex;flex-direction:column;"></aside>
+  <div class="main-content" style="flex:1;">
+    <div class="top-bar">
+      <div>
+        <h2 style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:700;color:#191c1e;">Bulk &amp; Community Projects</h2>
+        <p style="font-size:13px;color:#434655;">Institutional campus deployments and RWA society projects under MSCS Escrow</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="btn btn-primary" onclick="showModal('newProjectModal')">
+          <span class="material-symbols-outlined" style="font-size:16px;">add</span> New Project
+        </button>
+      </div>
+    </div>
+
+    <div style="padding:32px;">
+      <!-- KPI strip -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+        <div class="stat-card" style="border-top:3px solid #7c3aed;">
+          <span class="stat-label">Active Projects</span>
+          <span class="stat-value" id="kpi-active-count">8</span>
+          <span class="stat-meta">Societies &amp; Campuses</span>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #2563eb;">
+          <span class="stat-label">Artisans Deployed</span>
+          <span class="stat-value" id="kpi-crew-count">104</span>
+          <span class="stat-meta">Police-verified rosters</span>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #059669;">
+          <span class="stat-label">SBI Escrow Held</span>
+          <span class="stat-value">₹4.2L</span>
+          <span class="stat-meta">Milestone 1 &amp; 2 Advances</span>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #f59e0b;">
+          <span class="stat-label">Completion Rate</span>
+          <span class="stat-value">94%</span>
+          <span class="stat-meta">Seva Suraksha audited</span>
+        </div>
+      </div>
+
+      <!-- Type chips -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;" id="type-chips">
+        <button class="filter-chip active" data-type="all" onclick="setTypeFilter(this,'all')">All Projects (8)</button>
+        <button class="filter-chip" data-type="society" onclick="setTypeFilter(this,'society')">Societies &amp; RWAs</button>
+        <button class="filter-chip" data-type="campus" onclick="setTypeFilter(this,'campus')">Colleges &amp; Campuses</button>
+      </div>
+
+      <!-- Projects Table -->
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:16px 24px;border-bottom:1px solid #e6e8ea;display:flex;align-items:center;justify-content:space-between;">
+          <h3 style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;color:#191c1e;">All Institutional &amp; Bulk Deployments</h3>
+          <span class="badge badge-gray" id="project-count-badge">8 Projects</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="projects-table">
+            <thead>
+              <tr>
+                <th>Project ID</th><th>Client / Community</th><th>Service</th><th>Scale Tier</th>
+                <th>Artisan Crew</th><th>Duration</th><th>Escrow Milestones</th><th>Total Value</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="projects-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Project Detail Modal -->
+<div class="modal-overlay" id="projectDetailModal">
+  <div class="modal-box" style="max-width:680px;">
+    <div class="modal-header">
+      <h3 style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:700;" id="proj-modal-id">Project Detail</h3>
+      <button onclick="closeModal('projectDetailModal')" style="background:none;border:none;cursor:pointer;"><span class="material-symbols-outlined" style="font-size:22px;color:#434655;">close</span></button>
+    </div>
+    <div class="modal-body" id="proj-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('projectDetailModal')">Close</button>
+      <button class="btn btn-primary btn-sm" onclick="showGatePassModal()">
+        <span class="material-symbols-outlined" style="font-size:16px;">badge</span> Digital Gate Pass
+      </button>
+      <button class="btn btn-success btn-sm" onclick="showProposalModal()">
+        <span class="material-symbols-outlined" style="font-size:16px;">description</span> Co-op Proposal
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Gate Pass Modal -->
+<div class="modal-overlay" id="gatePassModal">
+  <div class="modal-box" style="max-width:540px;">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="material-symbols-outlined" style="color:#004ac6;">security</span>
+        <h3 style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:700;">Campus Security Gate Pass</h3>
+      </div>
+      <button onclick="closeModal('gatePassModal')" style="background:none;border:none;cursor:pointer;"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="modal-body" id="gate-pass-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('gatePassModal')">Close</button>
+      <button class="btn btn-primary" onclick="alert('Digital gate pass saved to downloads.')">Download PDF Pass</button>
+    </div>
+  </div>
+</div>
+
+<!-- Proposal Modal -->
+<div class="modal-overlay" id="proposalModal">
+  <div class="modal-box" style="max-width:580px;">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="material-symbols-outlined" style="color:#059669;">verified</span>
+        <h3 style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:700;">Cooperative Society Project Proposal</h3>
+      </div>
+      <button onclick="closeModal('proposalModal')" style="background:none;border:none;cursor:pointer;"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="modal-body" id="proposal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('proposalModal')">Close</button>
+      <button class="btn btn-success" onclick="alert('Project proposal PDF generated with government MSCS seal.')">Download Official Estimate</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Project Modal -->
+<div class="modal-overlay" id="newProjectModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:700;">Create Bulk Project</h3>
+      <button onclick="closeModal('newProjectModal')" style="background:none;border:none;cursor:pointer;"><span class="material-symbols-outlined" style="font-size:22px;color:#434655;">close</span></button>
+    </div>
+    <form onsubmit="handleCreateProject(event)">
+      <div class="modal-body">
+        <div style="margin-bottom:14px;">
+          <label class="form-label">Client / Community Name</label>
+          <input class="form-input" id="new-client" placeholder="e.g. Palm Heights RWA or IIT Delhi" required/>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label class="form-label">Project Category Type</label>
+          <select class="form-input" id="new-type">
+            <option value="society">Societies &amp; RWAs</option>
+            <option value="campus">Colleges &amp; Campuses</option>
+          </select>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label class="form-label">Trade Service</label>
+          <select class="form-input" id="new-service">
+            <option>Deep Cleaning &amp; Sanitation</option>
+            <option>Wall Painting &amp; Waterproofing</option>
+            <option>Electrical Rewiring &amp; Solar</option>
+            <option>Plumbing &amp; Water Sump Cleaning</option>
+            <option>Landscape &amp; Lawn Gardening</option>
+            <option>Carpentry &amp; Furniture Repair</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+          <div>
+            <label class="form-label">Artisan Crew Size</label>
+            <input type="number" class="form-input" id="new-crew" placeholder="e.g. 8" min="1" max="50" required/>
+          </div>
+          <div>
+            <label class="form-label">Duration (Days)</label>
+            <input type="number" class="form-input" id="new-days" placeholder="e.g. 3" min="1" max="60" required/>
+          </div>
+        </div>
+        <div style="margin-bottom:0;">
+          <label class="form-label">Total Estimated Value (₹)</label>
+          <input type="number" class="form-input" id="new-amount" placeholder="e.g. 45000" min="1000" required/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('newProjectModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create &amp; Issue Escrow ID</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+const PROJECTS = [
+  { id:'COMM-4401', client:'Palm Heights RWA', type:'society', service:'Deep Cleaning', scale:'Medium Block (16–50 flats)', crew:8, days:2, m1:'Paid', m2:'Pending', m3:'N/A', amount:28000, status:'active', gatePass:'GP-4401', coops:'Delhi Swachh Shramik Co-op' },
+  { id:'COMM-4402', client:'Green Valley Society', type:'society', service:'Painting', scale:'Large Society (51–150 flats)', crew:15, days:5, m1:'Paid', m2:'Paid', m3:'Pending', amount:85000, status:'active', gatePass:'GP-4402', coops:'NCR Painters Guild Society' },
+  { id:'COMM-4403', client:'Sunrise Apartments', type:'society', service:'Plumbing', scale:'Micro Wing (5–15 flats)', crew:4, days:1, m1:'Paid', m2:'N/A', m3:'N/A', amount:18000, status:'completed', gatePass:'GP-4403', coops:'Delhi Jal Karigar Cooperative' },
+  { id:'INST-4404', client:'Delhi University North Campus', type:'campus', service:'Electrical', scale:'Academic Complex (3–5 Floors)', crew:20, days:4, m1:'Paid', m2:'Pending', m3:'Pending', amount:120000, status:'active', gatePass:'GP-4404', coops:'Delhi Electrical Labour Society' },
+  { id:'INST-4405', client:'Amity University Hostels', type:'campus', service:'Deep Cleaning', scale:'Hostel Block (100+ Rooms)', crew:12, days:3, m1:'Paid', m2:'Paid', m3:'N/A', amount:42000, status:'active', gatePass:'GP-4405', coops:'Delhi Mahila Shramik Co-op' },
+  { id:'COMM-4406', client:'Lotus Tower RWA', type:'society', service:'Gardening', scale:'Community Park &amp; Terrace', crew:3, days:2, m1:'Paid', m2:'N/A', m3:'N/A', amount:9000, status:'completed', gatePass:'GP-4406', coops:'Delhi Vriksha Karigar Co-op' },
+  { id:'COMM-4407', client:'Silver Oak Society', type:'society', service:'Carpentry', scale:'Society Doors &amp; Gates', crew:6, days:2, m1:'Pending', m2:'Pending', m3:'N/A', amount:22000, status:'pending', gatePass:'GP-4407', coops:'Delhi Kashta Karigar Co-op' },
+  { id:'INST-4408', client:'IIT Delhi Research Park', type:'campus', service:'Painting', scale:'Mega Campus (50+ Acre)', crew:30, days:7, m1:'Paid', m2:'Pending', m3:'Pending', amount:250000, status:'active', gatePass:'GP-4408', coops:'Delhi Multi-State Labour Federation' },
+];
+
+const STATUS_BADGE = {
+  active:    '<span class="badge badge-green">Active Deployment</span>',
+  completed: '<span class="badge badge-blue">Completed &amp; Audited</span>',
+  pending:   '<span class="badge badge-amber">Awaiting Advance</span>',
+};
+
+function mileBadge(v) {
+  if (v === 'Paid')    return '<span class="badge badge-green">Paid</span>';
+  if (v === 'Pending') return '<span class="badge badge-amber">Pending</span>';
+  return '<span style="color:#b0b3c0;font-size:12px;">—</span>';
+}
+
+let currentType = 'all';
+let currentSelectedProject = null;
+
+function renderProjects() {
+  const filtered = PROJECTS.filter(p => currentType === 'all' || p.type === currentType);
+  document.getElementById('projects-tbody').innerHTML = filtered.map(p => `
+    <tr>
+      <td><code style="background:${p.id.startsWith('INST') ? '#ede9fe' : '#dbeafe'};color:${p.id.startsWith('INST') ? '#5b21b6' : '#1e40af'};padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700;">${p.id}</code></td>
+      <td><strong>${p.client}</strong></td>
+      <td>${p.service}</td>
+      <td style="font-size:12px;color:#737686;">${p.scale}</td>
+      <td style="text-align:center;"><strong>${p.crew} Artisans</strong></td>
+      <td style="text-align:center;">${p.days} days</td>
+      <td>
+        <div style="display:flex;gap:4px;align-items:center;">
+          <span style="font-size:11px;color:#737686;margin-right:2px;">M1</span>${mileBadge(p.m1)}
+          <span style="font-size:11px;color:#737686;margin:0 2px;">M2</span>${mileBadge(p.m2)}
+          <span style="font-size:11px;color:#737686;margin:0 2px;">M3</span>${mileBadge(p.m3)}
+        </div>
+      </td>
+      <td><strong>₹${typeof p.amount === 'number' ? p.amount.toLocaleString() : p.amount}</strong></td>
+      <td>${STATUS_BADGE[p.status] || p.status}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-outline btn-sm" onclick="showProjectDetail('${p.id}')">Manage</button>
+      </td>
+    </tr>`).join('');
+  document.getElementById('project-count-badge').textContent = `${filtered.length} Projects`;
+}
+
+function setTypeFilter(el, type) {
+  document.querySelectorAll('#type-chips .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentType = type;
+  renderProjects();
+}
+
+function showProjectDetail(id) {
+  const p = PROJECTS.find(x => x.id === id);
+  if (!p) return;
+  currentSelectedProject = p;
+  document.getElementById('proj-modal-id').textContent = `${p.id} — ${p.client}`;
+  document.getElementById('proj-modal-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div><p class="form-label">Client / Community</p><p style="font-size:15px;font-weight:700;">${p.client}</p></div>
+      <div><p class="form-label">Service Trade</p><p style="font-size:14px;font-weight:600;">${p.service}</p></div>
+      <div><p class="form-label">Scale Tier</p><p style="font-size:13px;">${p.scale}</p></div>
+      <div><p class="form-label">Status</p>${STATUS_BADGE[p.status]}</div>
+      <div><p class="form-label">Deployed Crew</p><p style="font-size:14px;font-weight:700;color:#2563eb;">${p.crew} Certified Artisans</p></div>
+      <div><p class="form-label">Project Duration</p><p style="font-size:14px;">${p.days} Working Days</p></div>
+      <div><p class="form-label">Total Contract Value</p><p style="font-size:16px;font-weight:800;color:#059669;">₹${p.amount.toLocaleString()}</p></div>
+      <div><p class="form-label">Lead Cooperative</p><p style="font-size:13px;font-weight:600;">${p.coops || 'Delhi Labour Co-op Federation'}</p></div>
+    </div>
+    <div style="margin-top:20px;border-top:1px solid #e6e8ea;padding-top:16px;">
+      <p class="form-label" style="margin-bottom:10px;">80/10/6/4 Fair Wage Escrow Allocation</p>
+      <div style="background:#f8fafc;border-radius:10px;padding:12px;font-size:13px;line-height:1.6;">
+        <div style="display:flex;justify-content:space-between;"><span>Artisan Team Wages (80%):</span><strong>₹${Math.round(p.amount*0.8).toLocaleString()}</strong></div>
+        <div style="display:flex;justify-content:space-between;"><span>Worker Healthcare &amp; Accident Fund (10%):</span><strong>₹${Math.round(p.amount*0.1).toLocaleString()}</strong></div>
+        <div style="display:flex;justify-content:space-between;"><span>District Co-op Tool Depot Reserve (6%):</span><strong>₹${Math.round(p.amount*0.06).toLocaleString()}</strong></div>
+        <div style="display:flex;justify-content:space-between;"><span>Seva Suraksha Statutory Guarantee Pool (4%):</span><strong>₹${Math.round(p.amount*0.04).toLocaleString()}</strong></div>
+      </div>
+    </div>
+    <div style="margin-top:16px;border-top:1px solid #e6e8ea;padding-top:16px;">
+      <p class="form-label" style="margin-bottom:12px;">Milestone Escrow Handshake</p>
+      <div style="display:flex;gap:12px;">
+        <div style="flex:1;background:#f8fafc;border-radius:8px;padding:10px;text-align:center;">
+          <p style="font-size:11px;color:#737686;font-weight:700;">M1: ADVANCE (25%)</p>
+          <div style="margin-top:6px;">${mileBadge(p.m1)}</div>
+        </div>
+        <div style="flex:1;background:#f8fafc;border-radius:8px;padding:10px;text-align:center;">
+          <p style="font-size:11px;color:#737686;font-weight:700;">M2: MID-INSPECTION (50%)</p>
+          <div style="margin-top:6px;">${mileBadge(p.m2)}</div>
+        </div>
+        <div style="flex:1;background:#f8fafc;border-radius:8px;padding:10px;text-align:center;">
+          <p style="font-size:11px;color:#737686;font-weight:700;">M3: AUDIT SIGN-OFF (25%)</p>
+          <div style="margin-top:6px;">${mileBadge(p.m3)}</div>
+        </div>
+      </div>
+    </div>`;
+  showModal('projectDetailModal');
+}
+
+function showGatePassModal() {
+  if (!currentSelectedProject) return;
+  const p = currentSelectedProject;
+  closeModal('projectDetailModal');
+  document.getElementById('gate-pass-body').innerHTML = `
+    <div style="border:2px dashed #2563eb;border-radius:12px;padding:20px;background:#f0f6ff;">
+      <div style="text-align:center;margin-bottom:14px;">
+        <span class="badge badge-blue" style="font-size:12px;padding:4px 10px;">AUTHORIZED GATE PASS · ${p.gatePass || 'GP-9082'}</span>
+        <h3 style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:800;color:#1e40af;margin-top:6px;">${p.client}</h3>
+        <p style="font-size:12px;color:#434655;">Service: ${p.service} · Crew: ${p.crew} Artisans</p>
+      </div>
+      <div style="background:#fff;border-radius:8px;padding:12px;font-size:12px;line-height:1.7;">
+        <p><strong>Primary Lead Artisan:</strong> Vikram Singh (DL-COOP-8821)</p>
+        <p><strong>Police Verification:</strong> 100% Aadhaar KYC &amp; Crime Record Cleared</p>
+        <p><strong>Cooperative Vehicle:</strong> DL 3S CD 8492 (Toolkit Van)</p>
+        <p><strong>Valid Dates:</strong> Sep 04, 2026 to Sep 0${4+p.days}, 2026</p>
+      </div>
+      <div style="margin-top:12px;text-align:center;font-size:11px;color:#737686;">
+        Present this digital QR pass at the security entry gate.
+      </div>
+    </div>`;
+  showModal('gatePassModal');
+}
+
+function showProposalModal() {
+  if (!currentSelectedProject) return;
+  const p = currentSelectedProject;
+  closeModal('projectDetailModal');
+  document.getElementById('proposal-body').innerHTML = `
+    <div style="border:1px solid #c3c6d7;border-radius:12px;padding:20px;background:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #004ac6;padding-bottom:12px;margin-bottom:14px;">
+        <div>
+          <h3 style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:800;color:#004ac6;">UniServ Cooperative Federation</h3>
+          <p style="font-size:11px;color:#434655;">Multi-State Cooperative Societies Act 2002</p>
+        </div>
+        <span class="badge badge-green">OFFICIAL ESTIMATE</span>
+      </div>
+      <p style="font-size:13px;font-weight:700;">Project: ${p.client} — ${p.service}</p>
+      <p style="font-size:12px;color:#434655;margin-bottom:12px;">Scale Tier: ${p.scale} | ${p.crew} Verified Artisans | ${p.days} Days</p>
+      <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:12px;">
+        <tr style="border-bottom:1px solid #e6e8ea;"><td style="padding:6px 0;">Artisan Direct Wages</td><td style="text-align:right;font-weight:700;">₹${Math.round(p.amount*0.8).toLocaleString()}</td></tr>
+        <tr style="border-bottom:1px solid #e6e8ea;"><td style="padding:6px 0;">Healthcare &amp; Pension Pool (10%)</td><td style="text-align:right;font-weight:700;">₹${Math.round(p.amount*0.1).toLocaleString()}</td></tr>
+        <tr style="border-bottom:1px solid #e6e8ea;"><td style="padding:6px 0;">District Tools &amp; Training (6%)</td><td style="text-align:right;font-weight:700;">₹${Math.round(p.amount*0.06).toLocaleString()}</td></tr>
+        <tr style="border-bottom:2px solid #004ac6;"><td style="padding:6px 0;">Seva Suraksha Warranty Pool (4%)</td><td style="text-align:right;font-weight:700;">₹${Math.round(p.amount*0.04).toLocaleString()}</td></tr>
+        <tr style="font-size:14px;font-weight:800;color:#004ac6;"><td style="padding:8px 0;">Total Contract Value</td><td style="text-align:right;">₹${p.amount.toLocaleString()}</td></tr>
+      </table>
+      <p style="font-size:11px;color:#737686;text-align:center;">Includes 30-Day Zero-Cost Seva Suraksha Rework Guarantee.</p>
+    </div>`;
+  showModal('proposalModal');
+}
+
+function handleCreateProject(e) {
+  e.preventDefault();
+  const client = document.getElementById('new-client').value.trim();
+  const type = document.getElementById('new-type').value;
+  const service = document.getElementById('new-service').value;
+  const crew = parseInt(document.getElementById('new-crew').value, 10) || 5;
+  const days = parseInt(document.getElementById('new-days').value, 10) || 2;
+  const amount = parseInt(document.getElementById('new-amount').value, 10) || 30000;
+  const id = `${type === 'campus' ? 'INST' : 'COMM'}-${Math.floor(4410 + Math.random()*500)}`;
+
+  const newProj = {
+    id, client, type, service,
+    scale: `${crew} Artisans · ${days} Days`,
+    crew, days, m1:'Pending', m2:'Pending', m3:'N/A', amount,
+    status:'pending', gatePass:`GP-${Math.floor(1000+Math.random()*9000)}`,
+    coops:'Delhi Multi-State Labour Federation'
+  };
+
+  PROJECTS.unshift(newProj);
+  closeModal('newProjectModal');
+  renderProjects();
+  alert(`Project ${id} created for ${client}! Milestone 1 Escrow deposit invoice generated.`);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderSidebar('community');
+  renderProjects();
+});
+</script>
+</body>
+</html>

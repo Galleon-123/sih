@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Verification — UniServ Organizer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/custom.css"/>
+<style>
+.worker-card { background:#fff; border-radius:12px; border:1.5px solid #e6e8ea; padding:16px; cursor:pointer; transition:all 0.15s; }
+.worker-card:hover { border-color:#2563eb; box-shadow:0 4px 16px rgba(37,99,235,0.1); }
+.worker-card.selected { border-color:#2563eb; box-shadow:0 4px 16px rgba(37,99,235,0.15); background:#f0f6ff; }
+.doc-item { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f1f5f9; }
+.doc-item:last-child { border-bottom:none; }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="js/firebase-data.js"></script>
+</head>
+<body>
+<div style="display:flex;min-height:100vh;">
+  <aside id="sidebar" style="display:flex;flex-direction:column;"></aside>
+  <div class="main-content" style="flex:1;">
+    <div class="top-bar">
+      <div>
+        <h2 style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:700;color:#191c1e;">eKYC &amp; Artisan Verification</h2>
+        <p style="font-size:13px;color:#434655;">Review and authenticate Aadhaar identity, trade certificates &amp; police checks</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="badge badge-amber" style="font-size:13px;padding:6px 14px;" id="queue-badge">8 In Queue</span>
+        <span class="badge badge-green" style="font-size:13px;padding:6px 14px;" id="approved-badge">156 Approved</span>
+      </div>
+    </div>
+
+    <div style="padding:32px;display:grid;grid-template-columns:1fr 1.6fr;gap:24px;min-height:calc(100vh - 73px);">
+      <!-- Left: Queue List -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <h3 style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;color:#191c1e;">Pending Review</h3>
+          <select class="form-input" style="width:160px;font-size:13px;padding:6px 10px;" id="trade-filter" onchange="filterQueue(this.value)">
+            <option value="all">All 10 Trades</option>
+            <option value="Electrician">Electrician</option>
+            <option value="Plumber">Plumber</option>
+            <option value="Cleaner">Cleaner</option>
+            <option value="Carpenter">Carpenter</option>
+            <option value="Painter">Painter</option>
+            <option value="Caregiver">Caregiver</option>
+            <option value="Domestic Helper">Domestic Helper</option>
+            <option value="Driver">Driver</option>
+            <option value="Gardener">Gardener</option>
+            <option value="Technician">Technician</option>
+          </select>
+        </div>
+        <div id="queue-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+      </div>
+
+      <!-- Right: Document Review Panel -->
+      <div id="detail-panel">
+        <div style="background:#ffffff;border-radius:14px;border:1px solid #e6e8ea;padding:32px;text-align:center;color:#737686;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+          <span class="material-symbols-outlined" style="font-size:56px;color:#c3c6d7;">folder_open</span>
+          <h3 style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:700;color:#434655;">Select an artisan application</h3>
+          <p style="font-size:13px;">Click on any worker from the queue to inspect submitted Aadhaar KYC, selfie match, and trade certificate credentials.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-header">
+      <h3 style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:700;" id="confirm-title">Confirm Action</h3>
+      <button onclick="closeModal('confirmModal')" style="background:none;border:none;cursor:pointer;"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-message" style="font-size:14px;color:#434655;line-height:1.6;"></p>
+      <textarea class="form-input" placeholder="Optional notes (will be included in worker SMS alert)..." style="margin-top:16px;height:80px;resize:none;" id="confirm-note"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('confirmModal')">Cancel</button>
+      <button class="btn btn-primary" id="confirm-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+const AVCOLORS = ['#004ac6','#006c49','#784b00','#ba1a1a','#5c4db1','#0278ae','#a03b4c'];
+function avc(n){let i=0;for(let c of n)i+=c.charCodeAt(0);return AVCOLORS[i%AVCOLORS.length];}
+function ini(n){return n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();}
+
+let selectedId = null;
+let currentTradeFilter = 'all';
+
+function renderQueue() {
+  const filtered = VERIFICATION_QUEUE.filter(w => currentTradeFilter === 'all' || w.trade.toLowerCase().includes(currentTradeFilter.toLowerCase()));
+  document.getElementById('queue-list').innerHTML = filtered.map(w => {
+    const missing = [w.aadhaar==='missing'?'Aadhaar':null, w.selfie==='missing'?'Selfie':null, w.cert==='missing'?'Certificate':null].filter(Boolean);
+    const complete = missing.length === 0;
+    return `
+    <div class="worker-card${selectedId===w.id?' selected':''}" onclick="selectWorker('${w.id}')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="avatar" style="background:${avc(w.name)};width:40px;height:40px;font-size:14px;">${ini(w.name)}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <p style="font-size:14px;font-weight:700;color:#191c1e;">${w.name}</p>
+            ${complete ? '<span class="badge badge-green" style="font-size:11px;">All Docs ✓</span>' : `<span class="badge badge-amber" style="font-size:11px;">${missing.join(', ')} Missing</span>`}
+          </div>
+          <p style="font-size:12px;color:#434655;margin-top:2px;">${w.trade} · ${w.id}</p>
+          <p style="font-size:11px;color:#737686;margin-top:2px;">Applied: ${w.applied}</p>
+        </div>
+        <span class="material-symbols-outlined" style="font-size:18px;color:#c3c6d7;">chevron_right</span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('queue-badge').textContent = `${VERIFICATION_QUEUE.length} In Queue`;
+}
+
+function filterQueue(trade) {
+  currentTradeFilter = trade;
+  renderQueue();
+}
+
+function selectWorker(id) {
+  selectedId = id;
+  renderQueue();
+  const w = VERIFICATION_QUEUE.find(x => x.id === id);
+  if (!w) return;
+  document.getElementById('detail-panel').innerHTML = `
+    <div style="background:#fff;border-radius:14px;border:1px solid #e6e8ea;overflow:hidden;">
+      <!-- Header -->
+      <div style="background:linear-gradient(135deg,#004ac6,#2563eb);padding:24px;color:white;">
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div class="avatar" style="background:rgba(255,255,255,0.2);width:56px;height:56px;font-size:20px;border:2px solid rgba(255,255,255,0.4);">${ini(w.name)}</div>
+          <div>
+            <h3 style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:800;">${w.name}</h3>
+            <p style="font-size:13px;opacity:0.85;margin-top:3px;">${w.trade} · ${w.id} · Applied: ${w.applied}</p>
+          </div>
+        </div>
+      </div>
+      <!-- Documents -->
+      <div style="padding:24px;">
+        <h4 style="font-family:'Plus Jakarta Sans';font-size:15px;font-weight:700;color:#191c1e;margin-bottom:16px;">Submitted Documents Verification</h4>
+        <div>
+          <div class="doc-item">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:40px;height:40px;background:${w.aadhaar==='uploaded'?'#d1fae5':'#fee2e2'};border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                <span class="material-symbols-outlined" style="font-size:18px;color:${w.aadhaar==='uploaded'?'#059669':'#dc2626'};">badge</span>
+              </div>
+              <div>
+                <p style="font-size:14px;font-weight:600;color:#191c1e;">Aadhaar Identity Card</p>
+                <p style="font-size:12px;color:#434655;">UIDAI verified QR checksum</p>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              ${w.aadhaar === 'uploaded' ? '<span style="color:#059669;font-weight:700;font-size:13px;">✓ Verified</span>' : '<span style="color:#dc2626;font-weight:700;font-size:13px;">✗ Missing</span>'}
+            </div>
+          </div>
+          <div class="doc-item">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:40px;height:40px;background:${w.selfie==='uploaded'?'#d1fae5':'#fee2e2'};border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                <span class="material-symbols-outlined" style="font-size:18px;color:${w.selfie==='uploaded'?'#059669':'#dc2626'};">face</span>
+              </div>
+              <div>
+                <p style="font-size:14px;font-weight:600;color:#191c1e;">Live Face Match Photo</p>
+                <p style="font-size:12px;color:#434655;">Aadhaar biometrics face match: 98%</p>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              ${w.selfie === 'uploaded' ? '<span style="color:#059669;font-weight:700;font-size:13px;">✓ Matched</span>' : '<span style="color:#dc2626;font-weight:700;font-size:13px;">✗ Missing</span>'}
+            </div>
+          </div>
+          <div class="doc-item">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:40px;height:40px;background:${w.cert==='uploaded'?'#d1fae5':'#fee2e2'};border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                <span class="material-symbols-outlined" style="font-size:18px;color:${w.cert==='uploaded'?'#059669':'#dc2626'};">school</span>
+              </div>
+              <div>
+                <p style="font-size:14px;font-weight:600;color:#191c1e;">Trade Qualification Certificate</p>
+                <p style="font-size:12px;color:#434655;">${w.cert==='uploaded' ? 'ITI / NSDC Certificate attached' : 'Uncertified artisan — requires practical test'}</p>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              ${w.cert === 'uploaded' ? '<span style="color:#059669;font-weight:700;font-size:13px;">✓ Attached</span>' : '<span style="color:#d97706;font-weight:700;font-size:13px;">Token Route</span>'}
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Actions -->
+      <div style="padding:16px 24px;background:#f8fafc;border-top:1px solid #e6e8ea;display:flex;justify-content:space-between;align-items:center;">
+        <button class="btn btn-danger btn-sm" onclick="handleAction('${w.id}','reject')">
+          <span class="material-symbols-outlined" style="font-size:16px;">close</span> Reject
+        </button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline btn-sm" onclick="handleAction('${w.id}','request')">
+            <span class="material-symbols-outlined" style="font-size:16px;">contact_mail</span> Request Missing Docs
+          </button>
+          <button class="btn btn-success btn-sm" onclick="handleAction('${w.id}','approve')">
+            <span class="material-symbols-outlined" style="font-size:16px;">check</span> Approve &amp; Activate Worker
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function handleAction(id, action) {
+  const w = VERIFICATION_QUEUE.find(x => x.id === id);
+  if (!w) return;
+
+  if (action === 'approve') {
+    // Write approval to Firestore (updates worker profile live)
+    if (typeof UniServWorkers !== 'undefined') {
+      UniServWorkers.approveKyc(id).catch(console.error);
+    }
+    const idx = VERIFICATION_QUEUE.findIndex(x => x.id === id);
+    if (idx !== -1) VERIFICATION_QUEUE.splice(idx, 1);
+    selectedId = null;
+    renderQueue();
+    document.getElementById('detail-panel').innerHTML = `
+      <div style="background:#f0fdf4;border-radius:14px;border:1.5px solid #a7f3d0;padding:32px;text-align:center;">
+        <span class="material-symbols-outlined" style="font-size:56px;color:#059669;">verified</span>
+        <h3 style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:800;color:#065f46;margin-top:10px;">${w.name} APPROVED!</h3>
+        <p style="font-size:13px;color:#047857;margin-top:4px;">Artisan account activated on UniServ live dispatch mesh. Welcome SMS dispatched.</p>
+      </div>`;
+  } else if (action === 'reject') {
+    if (typeof UniServWorkers !== 'undefined') {
+      UniServWorkers.rejectKyc(id, 'Documents incomplete or invalid').catch(console.error);
+    }
+    const idx = VERIFICATION_QUEUE.findIndex(x => x.id === id);
+    if (idx !== -1) VERIFICATION_QUEUE.splice(idx, 1);
+    selectedId = null;
+    renderQueue();
+  } else {
+    alert(`SMS alert sent to ${w.name} to upload required missing verification documents.`);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderSidebar('verification');
+  // Subscribe to Firestore pending workers
+  if (typeof UniServWorkers !== 'undefined') {
+    UniServWorkers.subscribePending((workers) => {
+      VERIFICATION_QUEUE.length = 0;
+      workers.forEach((w) => VERIFICATION_QUEUE.push({
+        id: w.id || w.uid,
+        name: w.name || '',
+        trade: w.trade || '',
+        applied: w.createdAt?.toDate?.()?.toISOString?.()?.split?.('T')?.[0] || '',
+        aadhaar: w.aadhaarFront ? 'uploaded' : 'missing',
+        selfie: w.selfie ? 'uploaded' : 'missing',
+        cert: (w.certificates && w.certificates.length > 0) ? 'uploaded' : 'missing',
+      }));
+      renderQueue();
+    });
+  } else {
+    renderQueue();
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Live Bookings — UniServ Organizer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/custom.css"/>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="js/firebase-data.js"></script>
+</head>
+<body>
+<div style="display:flex;min-height:100vh;">
+  <aside id="sidebar" style="display:flex;flex-direction:column;"></aside>
+  <div class="main-content" style="flex:1;">
+    <div class="top-bar">
+      <div>
+        <h2 style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:700;color:#191c1e;">Live Bookings</h2>
+        <p style="font-size:13px;color:#434655;">Real-time view of all active and recent jobs</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="background:#d1fae5;color:#065f46;font-size:13px;font-weight:700;padding:6px 14px;border-radius:8px;display:flex;align-items:center;gap:6px;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#059669;display:inline-block;"></span>
+          67 Active Now
+        </div>
+        <button class="btn btn-outline btn-sm">
+          <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export
+        </button>
+      </div>
+    </div>
+
+    <div style="padding:32px;">
+      <!-- KPI strip -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+        <div class="stat-card" style="border-top:3px solid #059669;">
+          <span class="stat-label">Active Jobs</span>
+          <span class="stat-value">67</span>
+          <span class="stat-meta">Live tracking: <strong style="color:#7c3aed;">24</strong></span>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #2563eb;">
+          <span class="stat-label">Completed Today</span>
+          <span class="stat-value">143</span>
+          <span class="stat-meta">↑ 18% vs yesterday</span>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #f59e0b;">
+          <span class="stat-label">Awaiting Start OTP</span>
+          <span class="stat-value">12</span>
+          <span class="stat-meta">Worker arrived</span>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #dc2626;">
+          <span class="stat-label">Disputed / Flagged</span>
+          <span class="stat-value">3</span>
+          <span class="stat-meta"><a href="complaints.html" style="color:#dc2626;font-weight:700;">Review →</a></span>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="card" style="margin-bottom:24px;padding:16px 20px;">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;position:relative;">
+            <span class="material-symbols-outlined" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;color:#737686;">search</span>
+            <input type="text" id="search-input" placeholder="Search booking ID, worker, area..." class="form-input" style="padding-left:40px;" oninput="filterBookings()"/>
+          </div>
+          <select id="trade-filter" class="form-input" style="width:180px;" onchange="filterBookings()">
+            <option value="">All Services</option>
+            <option>Electrician</option><option>Plumber</option><option>Cleaner</option>
+            <option>Carpenter</option><option>Painter</option><option>Caregiver</option>
+            <option>Domestic Helper</option><option>Driver</option><option>Gardener</option><option>Technician</option>
+          </select>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;" id="status-chips">
+            <button class="filter-chip active" data-filter="all" onclick="setBookingFilter(this,'all')">All</button>
+            <button class="filter-chip" data-filter="active" onclick="setBookingFilter(this,'active')">Active</button>
+            <button class="filter-chip" data-filter="completed" onclick="setBookingFilter(this,'completed')">Completed</button>
+            <button class="filter-chip" data-filter="cancelled" onclick="setBookingFilter(this,'cancelled')">Cancelled</button>
+            <button class="filter-chip" data-filter="ivrs" onclick="setBookingFilter(this,'ivrs')">📞 IVRS / Phone</button>
+            <button class="filter-chip" data-filter="warranty" onclick="setBookingFilter(this,'warranty')">🛡 Seva Suraksha</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bookings Table -->
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:16px 24px;border-bottom:1px solid #e6e8ea;display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <h3 style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;color:#191c1e;">All Bookings</h3>
+            <span id="booking-count" class="badge badge-gray">Showing 20</span>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="bookings-table">
+            <thead>
+              <tr>
+                <th>Booking ID</th><th>Service</th><th>Customer Area</th>
+                <th>Worker</th><th>Status</th><th>Amount</th><th>Booking Type</th><th>Source</th><th>Warranty</th><th>Created</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="bookings-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Booking Detail Modal -->
+<div class="modal-overlay" id="bookingDetailModal">
+  <div class="modal-box" style="max-width:600px;">
+    <div class="modal-header">
+      <h3 style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:700;" id="modal-booking-id">Booking Detail</h3>
+      <button onclick="closeModal('bookingDetailModal')" style="background:none;border:none;cursor:pointer;"><span class="material-symbols-outlined" style="font-size:22px;color:#434655;">close</span></button>
+    </div>
+    <div class="modal-body" id="modal-booking-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('bookingDetailModal')">Close</button>
+      <button class="btn btn-danger btn-sm" onclick="closeModal('bookingDetailModal');alert('Dispute flagged. Complaint will be created.')">Flag Dispute</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+const BOOKINGS = [
+  { id:'BKG-8821', service:'Electrical Repair',   serviceType:'electrician',    area:'Lajpat Nagar',   worker:'Ravi Kumar',    status:'active',    amount:450,  booking_type:'now',       source:'app',  warranty:false, overtime:false, created:'2026-09-04 09:12 AM', otp_status:'Work Started' },
+  { id:'BKG-8820', service:'Pipe Leakage Fix',     serviceType:'plumber',        area:'Dwarka',          worker:'Ganesh Mishra', status:'active',    amount:380,  booking_type:'scheduled', source:'app',  warranty:false, overtime:false, created:'2026-09-04 09:30 AM', otp_status:'On The Way' },
+  { id:'BKG-8819', service:'Deep Home Cleaning',   serviceType:'cleaner',        area:'Saket',           worker:'Meena Devi',    status:'active',    amount:600,  booking_type:'now',       source:'app',  warranty:false, overtime:false, created:'2026-09-04 10:00 AM', otp_status:'Work Started' },
+  { id:'BKG-8818', service:'Door Hinge Repair',    serviceType:'carpenter',      area:'Rohini',          worker:'Arjun Rawat',   status:'completed', amount:350,  booking_type:'now',       source:'app',  warranty:true,  overtime:false, created:'2026-09-04 08:00 AM', otp_status:'Completed' },
+  { id:'BKG-8817', service:'Elderly Patient Care', serviceType:'caregiver',      area:'Vasant Vihar',    worker:'Priya Sharma',  status:'active',    amount:800,  booking_type:'emergency', source:'app',  warranty:false, overtime:false, created:'2026-09-04 07:45 AM', otp_status:'Work Started' },
+  { id:'BKG-8816', service:'AC Servicing',         serviceType:'technician',     area:'Greater Noida',   worker:'Dinesh Tiwari', status:'active',    amount:550,  booking_type:'scheduled', source:'ivrs', warranty:false, overtime:false, created:'2026-09-04 10:30 AM', otp_status:'Booking Confirmed' },
+  { id:'BKG-8815', service:'Airport Drop (Sedan)', serviceType:'driver',         area:'Connaught Place', worker:'Ramesh Gupta',  status:'completed', amount:700,  booking_type:'scheduled', source:'app',  warranty:false, overtime:false, created:'2026-09-04 06:00 AM', otp_status:'Completed', driver_details:'Sedan · 5-seater · Manual · One-way' },
+  { id:'BKG-8814', service:'Garden Maintenance',   serviceType:'gardener',       area:'Pitampura',       worker:'Radha Pandey',  status:'active',    amount:420,  booking_type:'now',       source:'ivrs', warranty:false, overtime:false, created:'2026-09-04 11:00 AM', otp_status:'On The Way' },
+  { id:'BKG-8813', service:'Interior Painting',    serviceType:'painter',        area:'Vasant Kunj',     worker:'Savita Nair',   status:'active',    amount:1200, booking_type:'scheduled', source:'app',  warranty:false, overtime:true,  created:'2026-09-04 08:30 AM', otp_status:'Work Started' },
+  { id:'BKG-8812', service:'Daily Kitchen Help',   serviceType:'domestic_helper',area:'Janakpuri',       worker:'Lalita Verma',  status:'active',    amount:300,  booking_type:'now',       source:'ivrs', warranty:false, overtime:false, created:'2026-09-04 09:00 AM', otp_status:'Work Started' },
+  { id:'BKG-8811', service:'Fan Installation',     serviceType:'electrician',    area:'Hauz Khas',       worker:'Kishore Kumar', status:'completed', amount:280,  booking_type:'now',       source:'app',  warranty:true,  overtime:false, created:'2026-09-03 04:00 PM', otp_status:'Completed' },
+  { id:'BKG-8810', service:'Bathroom Tile Fix',    serviceType:'plumber',        area:'Malviya Nagar',   worker:'Bharat Sharma', status:'cancelled', amount:250,  booking_type:'scheduled', source:'app',  warranty:false, overtime:false, created:'2026-09-03 02:00 PM', otp_status:'Cancelled' },
+];
+
+const STATUS_BADGE = {
+  active:    '<span class="badge badge-green">Active</span>',
+  completed: '<span class="badge badge-blue">Completed</span>',
+  cancelled: '<span class="badge badge-red">Cancelled</span>',
+};
+const TYPE_BADGE = {
+  emergency: '<span class="badge badge-red">Emergency</span>',
+  now:       '<span class="badge badge-amber">Now</span>',
+  scheduled: '<span class="badge badge-gray">Scheduled</span>',
+};
+
+let currentFilter = 'all';
+
+function renderBookings() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const trade = document.getElementById('trade-filter').value.toLowerCase();
+  const filtered = BOOKINGS.filter(b => {
+    const matchSearch = !search || b.id.toLowerCase().includes(search) || b.worker.toLowerCase().includes(search) || b.area.toLowerCase().includes(search);
+    const matchTrade = !trade || b.serviceType.replace('_',' ').includes(trade) || b.service.toLowerCase().includes(trade);
+    const matchStatus = currentFilter === 'all' || b.status === currentFilter
+      || (currentFilter === 'ivrs' && b.source === 'ivrs')
+      || (currentFilter === 'warranty' && b.warranty === true);
+    return matchSearch && matchTrade && matchStatus;
+  });
+  document.getElementById('bookings-tbody').innerHTML = filtered.map(b => `
+    <tr>
+      <td><code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:12px;">${b.id}</code></td>
+      <td><strong>${b.service}</strong></td>
+      <td>${b.area}</td>
+      <td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="background:${avatarColor(b.worker)};width:28px;height:28px;font-size:11px;">${initials(b.worker)}</div>${b.worker}</div></td>
+      <td>${STATUS_BADGE[b.status] || b.status}</td>
+      <td><strong>₹${b.amount}</strong>${b.overtime ? ' <span class="badge badge-amber" style="font-size:10px;">+₹100 OT</span>':''}</td>
+      <td>${TYPE_BADGE[b.booking_type] || b.booking_type}</td>
+      <td>${b.source==='ivrs' ? '<span class="badge badge-blue">📞 IVRS</span>' : '<span class="badge badge-gray">App</span>'}</td>
+      <td>${b.warranty ? '<span class="badge badge-green">🛡 30-day</span>' : '<span style="color:#b0b3c0;font-size:12px;">—</span>'}</td>
+      <td style="font-size:12px;color:#737686;">${b.created}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="showBookingDetail('${b.id}')">Details</button>
+      </td>
+    </tr>`).join('');
+  document.getElementById('booking-count').textContent = `Showing ${filtered.length}`;
+}
+
+function filterBookings() { renderBookings(); }
+
+function setBookingFilter(el, filter) {
+  document.querySelectorAll('#status-chips .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = filter;
+  renderBookings();
+}
+
+function showBookingDetail(id) {
+  const b = BOOKINGS.find(x => x.id === id);
+  if (!b) return;
+  document.getElementById('modal-booking-id').textContent = b.id;
+  document.getElementById('modal-booking-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div><p class="form-label">Service</p><p style="font-size:15px;font-weight:700;">${b.service}</p></div>
+      <div><p class="form-label">Status</p>${STATUS_BADGE[b.status]}</div>
+      <div><p class="form-label">Worker</p><p style="font-size:14px;font-weight:600;">${b.worker}</p></div>
+      <div><p class="form-label">Customer Area</p><p style="font-size:14px;">${b.area}</p></div>
+      <div><p class="form-label">Booking Type</p>${TYPE_BADGE[b.booking_type]}</div>
+      <div><p class="form-label">Source</p>${b.source==='ivrs'?'<span class="badge badge-blue">📞 IVRS / Phone</span>':'<span class="badge badge-gray">App</span>'}</div>
+      <div><p class="form-label">Amount</p><p style="font-size:15px;font-weight:700;color:#059669;">₹${b.amount}${b.overtime?' <span style="font-size:12px;color:#d97706;">(incl. +₹100 OT)</span>':''}</p></div>
+      <div><p class="form-label">Seva Suraksha</p>${b.warranty?'<span class="badge badge-green">🛡 Active — 30-day warranty</span>':'<span style="color:#737686;font-size:13px;">—</span>'}</div>
+      <div><p class="form-label">OTP Handshake</p><span class="badge badge-blue">${b.otp_status}</span></div>
+      <div><p class="form-label">Created</p><p style="font-size:13px;color:#737686;">${b.created}</p></div>
+    </div>
+    ${b.driver_details?`<div style="margin-top:14px;background:#f0f6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;"><p class="form-label" style="margin-bottom:4px;">Driver Trip Details</p><p style="font-size:13px;font-weight:700;color:#191c1e;">${b.driver_details}</p></div>`:''}
+  `;
+  showModal('bookingDetailModal');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderSidebar('bookings');
+
+  // Subscribe to live bookings from Firestore
+  if (typeof UniServBookings !== 'undefined') {
+    UniServBookings.subscribeAll((bookings) => {
+      BOOKINGS.length = 0;
+      const statusLabels = ['Confirmed', 'Worker Assigned', 'On the Way', 'Arrived', 'In Progress', 'Completed'];
+      bookings.forEach((b) => BOOKINGS.push({
+        id: b.bookingId || b.id,
+        service: b.service?.name || b.serviceName || 'Service',
+        customer: b.userName || b.userId || 'Customer',
+        worker: b.workerName || b.workerId || 'Assigned',
+        address: b.address || '',
+        time: b.createdAt?.toDate?.()?.toLocaleTimeString?.() || '',
+        date: b.createdAt?.toDate?.()?.toLocaleDateString?.() || '',
+        amount: b.total_amount || b.totalAmount || 0,
+        status: statusLabels[b.status] || 'Confirmed',
+        payment: b.payment_status === 'success' ? 'Paid' : 'Pending',
+      }));
+      renderBookings();
+    });
+  } else {
+    renderBookings();
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Assessment Review — UniServ Organizer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/custom.css"/>
+<style>
+.score-ring { position:relative; width:120px; height:120px; }
+.score-ring svg { transform: rotate(-90deg); }
+.score-text { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.criteria-row { display:flex; align-items:center; justify-content:space-between; padding:12px; border-radius:10px; margin-bottom:8px; background:#f8fafc; border:1px solid #e6e8ea; }
+.criteria-btn { padding:6px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:1px solid transparent; transition:all 0.15s; }
+.criteria-btn.pass { background:#d1fae5; color:#065f46; border-color:#a7f3d0; }
+.criteria-btn.fail { background:#fee2e2; color:#991b1b; border-color:#fca5a5; }
+.criteria-btn.unset { background:#fff; color:#737686; border-color:#c3c6d7; }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="js/firebase-data.js"></script>
+</head>
+<body>
+<div style="display:flex;min-height:100vh;">
+  <aside id="sidebar" style="display:flex;flex-direction:column;"></aside>
+  <div class="main-content" style="flex:1;">
+    <div class="top-bar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button onclick="history.back()" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;color:#434655;font-size:14px;font-weight:600;">
+          <span class="material-symbols-outlined" style="font-size:20px;">arrow_back</span> Back
+        </button>
+        <div style="width:1px;height:24px;background:#e6e8ea;"></div>
+        <div>
+          <h2 style="font-family:'Plus Jakarta Sans';font-size:20px;font-weight:700;color:#191c1e;" id="page-title">Practical Skill Assessment Review</h2>
+          <p style="font-size:13px;color:#434655;" id="page-sub">Trade-specific rubric verification for uncertified artisan accreditation</p>
+        </div>
+      </div>
+      <!-- Trade selector -->
+      <div style="display:flex;align-items:center;gap:10px;">
+        <label style="font-size:13px;color:#434655;font-weight:600;">Worker Trade:</label>
+        <select class="form-input" style="width:190px;" id="trade-selector" onchange="loadTrade(this.value)">
+          <option value="Electrician">Electrician</option>
+          <option value="Plumber">Plumber</option>
+          <option value="Cleaner">Cleaner</option>
+          <option value="Domestic Helper">Domestic Helper</option>
+          <option value="Gardener">Gardener</option>
+          <option value="Carpenter">Carpenter</option>
+          <option value="Painter">Painter</option>
+          <option value="Caregiver">Caregiver</option>
+          <option value="Driver">Driver</option>
+          <option value="Technician">Technician</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="padding:32px;">
+      <div style="display:grid;grid-template-columns:1.8fr 1fr;gap:24px;">
+        <!-- Left: Assessment form -->
+        <div>
+          <!-- Worker info card -->
+          <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg,#004ac6,#2563eb);border:none;color:white;">
+            <div style="display:flex;align-items:center;gap:20px;">
+              <div style="width:64px;height:64px;border-radius:16px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans';font-size:24px;font-weight:800;border:2px solid rgba(255,255,255,0.3);" id="worker-avatar">RK</div>
+              <div>
+                <h3 style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:800;" id="worker-name">Ravi Kumar</h3>
+                <p style="font-size:13px;opacity:0.85;margin-top:4px;">Token: <strong id="worker-token">ASS-4821</strong> · Application: <strong id="worker-id">WRK-1001</strong></p>
+                <p style="font-size:12px;opacity:0.75;margin-top:2px;" id="worker-loc">Experience: 5 years · Lajpat Nagar, Delhi</p>
+              </div>
+              <div style="margin-left:auto;text-align:right;">
+                <p style="font-size:11px;opacity:0.75;text-transform:uppercase;font-weight:700;letter-spacing:0.06em;">Assessor</p>
+                <p style="font-size:14px;font-weight:700;margin-top:3px;">Rajesh Kumar</p>
+                <p style="font-size:12px;opacity:0.75;margin-top:1px;">Sep 4, 2026 · 10:00 AM</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Assessment criteria card -->
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+              <div>
+                <h3 style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:700;color:#191c1e;" id="assessment-title">PRACTICAL ASSESSMENT</h3>
+                <p style="font-size:13px;color:#434655;margin-top:2px;" id="assessment-sub">Marking criteria for Electrician</p>
+              </div>
+              <span class="badge badge-blue" id="criteria-count">6 criteria</span>
+            </div>
+
+            <!-- Criteria list -->
+            <div id="criteria-list"></div>
+
+            <!-- Safety violation -->
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e6e8ea;">
+              <label class="form-label" style="margin-bottom:10px;">Safety Violation Observed</label>
+              <div style="display:flex;gap:10px;">
+                <button class="criteria-btn pass" id="sv-none" onclick="setSafetyViolation('none')">None (Safe)</button>
+                <button class="criteria-btn unset" id="sv-minor" onclick="setSafetyViolation('minor')">Minor Violation (-10%)</button>
+                <button class="criteria-btn unset" id="sv-major" onclick="setSafetyViolation('major')">Major Hazard (Auto-Fail)</button>
+              </div>
+            </div>
+
+            <!-- Assessor notes -->
+            <div style="margin-top:16px;">
+              <label class="form-label">Assessor Notes &amp; Observations</label>
+              <textarea class="form-input" placeholder="Remarks on toolkit handling, speed, safety gear, and diagnostic skills..." style="height:80px;resize:none;" id="assessor-notes"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Score + Decision -->
+        <div>
+          <!-- Score ring card -->
+          <div class="card" style="text-align:center;margin-bottom:20px;">
+            <h4 style="font-family:'Plus Jakarta Sans';font-size:15px;font-weight:700;color:#191c1e;margin-bottom:16px;">Overall Assessment Score</h4>
+            <div style="display:flex;justify-content:center;margin-bottom:12px;">
+              <div class="score-ring">
+                <svg width="120" height="120" viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="#e6e8ea" stroke-width="10"/>
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="#2563eb" stroke-width="10"
+                    id="score-arc"
+                    stroke-dasharray="314"
+                    stroke-dashoffset="314"
+                    stroke-linecap="round"/>
+                </svg>
+                <div class="score-text">
+                  <span style="font-family:'Plus Jakarta Sans';font-size:28px;font-weight:800;color:#191c1e;" id="score-display">0</span>
+                  <span style="font-size:11px;color:#737686;font-weight:600;">/100</span>
+                </div>
+              </div>
+            </div>
+            <div id="score-verdict" style="font-size:14px;color:#737686;font-weight:600;">Mark all criteria to calculate score</div>
+          </div>
+
+          <!-- Progress breakdown -->
+          <div class="card" style="margin-bottom:20px;">
+            <h4 style="font-family:'Plus Jakarta Sans';font-size:14px;font-weight:700;color:#191c1e;margin-bottom:14px;">Criteria Progress</h4>
+            <div id="progress-breakdown"></div>
+            <div style="margin-top:12px;display:flex;justify-content:space-between;font-size:13px;">
+              <span style="color:#059669;font-weight:700;" id="pass-count">0 Pass</span>
+              <span style="color:#dc2626;font-weight:700;" id="fail-count">0 Fail</span>
+              <span style="color:#737686;" id="pending-count">0 Pending</span>
+            </div>
+          </div>
+
+          <!-- Decision buttons -->
+          <div class="card" style="background:#f8fafc;border:2px dashed #c3c6d7;">
+            <h4 style="font-family:'Plus Jakarta Sans';font-size:15px;font-weight:700;color:#191c1e;margin-bottom:8px;text-align:center;">Accreditation Decision</h4>
+            <p style="font-size:12px;color:#434655;text-align:center;margin-bottom:16px;">Minimum 60% required to issue cooperative trade certificate</p>
+            <div style="display:flex;gap:12px;">
+              <button class="btn btn-success" style="flex:1;justify-content:center;padding:13px;" onclick="submitDecision('PASS')">
+                <span class="material-symbols-outlined" style="font-size:18px;">check_circle</span> PASS &amp; VERIFY
+              </button>
+              <button class="btn btn-danger" style="flex:1;justify-content:center;padding:13px;" onclick="submitDecision('FAIL')">
+                <span class="material-symbols-outlined" style="font-size:18px;">cancel</span> REJECT
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+let currentTrade = 'Electrician';
+let criteriaState = {};
+let safetyPenalty = 0;
+
+function loadTrade(trade) {
+  currentTrade = trade;
+  const list = ASSESSMENT_CRITERIA[trade] || ['Safety Practices', 'Core Technique', 'Diagnostics', 'Tool Handling'];
+  criteriaState = {};
+  list.forEach(c => { criteriaState[c] = 'pass'; }); // default pass for easy review
+  safetyPenalty = 0;
+
+  document.getElementById('assessment-title').textContent = `${trade.toUpperCase()} SKILL RUBRIC`;
+  document.getElementById('assessment-sub').textContent = `Assessing practical competence for ${trade}`;
+  document.getElementById('criteria-count').textContent = `${list.length} criteria`;
+  document.getElementById('trade-selector').value = trade;
+
+  renderCriteriaList(list);
+  recalc();
+}
+
+function renderCriteriaList(list) {
+  const container = document.getElementById('criteria-list');
+  container.innerHTML = list.map((item, idx) => `
+    <div class="criteria-row">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="width:24px;height:24px;border-radius:12px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#475569;">${idx+1}</span>
+        <span style="font-size:14px;font-weight:600;color:#1e293b;">${item}</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="criteria-btn ${criteriaState[item]==='pass'?'pass':'unset'}" onclick="setMark('${item}','pass')">✓ Pass</button>
+        <button class="criteria-btn ${criteriaState[item]==='fail'?'fail':'unset'}" onclick="setMark('${item}','fail')">✗ Fail</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function setMark(item, val) {
+  criteriaState[item] = val;
+  const list = ASSESSMENT_CRITERIA[currentTrade] || [];
+  renderCriteriaList(list);
+  recalc();
+}
+
+function setSafetyViolation(type) {
+  document.getElementById('sv-none').className = 'criteria-btn unset';
+  document.getElementById('sv-minor').className = 'criteria-btn unset';
+  document.getElementById('sv-major').className = 'criteria-btn unset';
+
+  if (type === 'none') {
+    safetyPenalty = 0;
+    document.getElementById('sv-none').className = 'criteria-btn pass';
+  } else if (type === 'minor') {
+    safetyPenalty = 15;
+    document.getElementById('sv-minor').className = 'criteria-btn fail';
+  } else if (type === 'major') {
+    safetyPenalty = 100;
+    document.getElementById('sv-major').className = 'criteria-btn fail';
+  }
+  recalc();
+}
+
+function recalc() {
+  const items = Object.keys(criteriaState);
+  const total = items.length;
+  if (total === 0) return;
+
+  const passes = items.filter(k => criteriaState[k] === 'pass').length;
+  const fails = items.filter(k => criteriaState[k] === 'fail').length;
+  const pending = total - passes - fails;
+
+  let rawScore = Math.round((passes / total) * 100);
+  let finalScore = Math.max(0, rawScore - safetyPenalty);
+
+  document.getElementById('pass-count').textContent = `${passes} Pass`;
+  document.getElementById('fail-count').textContent = `${fails} Fail`;
+  document.getElementById('pending-count').textContent = `${pending} Pending`;
+  document.getElementById('score-display').textContent = finalScore;
+
+  // Arc calculation (circumference = 314)
+  const offset = 314 - (finalScore / 100) * 314;
+  const arc = document.getElementById('score-arc');
+  arc.style.strokeDashoffset = offset;
+  arc.style.stroke = finalScore >= 60 ? '#059669' : '#dc2626';
+
+  const verdict = document.getElementById('score-verdict');
+  if (finalScore >= 60) {
+    verdict.innerHTML = '<span style="color:#059669;font-weight:700;">✓ PASSED — Qualified for Cooperative Guild</span>';
+  } else {
+    verdict.innerHTML = '<span style="color:#dc2626;font-weight:700;">✗ FAILED — Requires Skill Training</span>';
+  }
+}
+
+function submitDecision(decision) {
+  const score = document.getElementById('score-display').textContent;
+  if (decision === 'PASS') {
+    alert(`Worker ACCREDITED with score ${score}/100!\nCooperative trade certificate issued and profile activated on live dispatch.`);
+  } else {
+    alert(`Worker marked as FAILED (${score}/100).\nScheduled for remedial training at District Tool & Training Academy.`);
+  }
+  window.location.href = 'assessment.html';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderSidebar('assessment');
+  loadTrade('Electrician');
+});
+</script>
+</body>
+</html>

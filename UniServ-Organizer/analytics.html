@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Analytics — UniServ Organizer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/custom.css"/>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="js/firebase-data.js"></script>
+</head>
+<body>
+<div style="display:flex;min-height:100vh;">
+  <aside id="sidebar" style="display:flex;flex-direction:column;"></aside>
+  <div class="main-content" style="flex:1;">
+    <div class="top-bar">
+      <div>
+        <h2 style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:700;color:#191c1e;">Analytics &amp; Reports</h2>
+        <p style="font-size:13px;color:#434655;">Platform performance and cooperative health metrics</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #c3c6d7;border-radius:8px;padding:8px 14px;">
+          <span class="material-symbols-outlined" style="font-size:16px;color:#737686;">calendar_today</span>
+          <input type="date" style="border:none;outline:none;font-size:13px;color:#191c1e;font-family:'Work Sans';" value="2026-09-01"/>
+          <span style="color:#737686;font-size:13px;">—</span>
+          <input type="date" style="border:none;outline:none;font-size:13px;color:#191c1e;font-family:'Work Sans';" value="2026-09-02"/>
+        </div>
+        <button class="btn btn-primary btn-sm">
+          <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export CSV
+        </button>
+      </div>
+    </div>
+
+    <div style="padding:32px;">
+      <!-- KPI Row -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:28px;">
+        <div class="stat-card" style="border-top:3px solid #2563eb;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="stat-label">Total Bookings</span>
+            <span class="material-symbols-outlined" style="font-size:20px;color:#2563eb;">receipt_long</span>
+          </div>
+          <span class="stat-value">1,842</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;">↑ 18%</span>
+            <span class="stat-meta">vs last month</span>
+          </div>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #059669;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="stat-label">Revenue Processed</span>
+            <span class="material-symbols-outlined" style="font-size:20px;color:#059669;">currency_rupee</span>
+          </div>
+          <span class="stat-value">₹9.2L</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;">↑ 24%</span>
+            <span class="stat-meta">vs last month</span>
+          </div>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #f59e0b;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="stat-label">Worker Utilisation</span>
+            <span class="material-symbols-outlined" style="font-size:20px;color:#d97706;">groups</span>
+          </div>
+          <span class="stat-value">78%</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;">↑ 5%</span>
+            <span class="stat-meta">vs last month</span>
+          </div>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #7c3aed;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="stat-label">Customer Rating</span>
+            <span class="material-symbols-outlined" style="font-size:20px;color:#7c3aed;">star</span>
+          </div>
+          <span class="stat-value">4.7★</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="background:#ede9fe;color:#5b21b6;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;">↑ 0.2</span>
+            <span class="stat-meta">avg satisfaction</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div style="display:grid;grid-template-columns:1.8fr 1fr;gap:24px;margin-bottom:24px;">
+        <!-- Monthly bar chart -->
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <h3 style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;color:#191c1e;">Jobs Completed — Last 6 Months</h3>
+            <span class="badge badge-green">+18% overall</span>
+          </div>
+          <div id="monthly-chart"></div>
+          <div style="display:flex;justify-content:space-around;margin-top:12px;" id="monthly-labels"></div>
+        </div>
+        <!-- Pie chart -->
+        <div class="card">
+          <h3 style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;color:#191c1e;margin-bottom:20px;">Jobs by Trade</h3>
+          <div style="display:flex;justify-content:center;margin-bottom:16px;">
+            <svg width="160" height="160" viewBox="0 0 160 160" id="pie-chart">
+              <circle cx="80" cy="80" r="60" fill="#f1f5f9"/>
+            </svg>
+          </div>
+          <div id="pie-legend" style="display:flex;flex-direction:column;gap:6px;"></div>
+        </div>
+      </div>
+
+      <!-- Bottom row: Top workers + Welfare Fund -->
+      <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:24px;">
+        <!-- Top workers table -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:16px 24px;border-bottom:1px solid #e6e8ea;display:flex;align-items:center;justify-content:space-between;">
+            <h3 style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;color:#191c1e;">Top 10 Workers by Jobs</h3>
+            <a href="workers.html" style="font-size:13px;color:#2563eb;font-weight:600;text-decoration:none;">View all →</a>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>#</th><th>Worker</th><th>Trade</th><th>Jobs</th><th>Rating</th><th>Earnings</th></tr></thead>
+            <tbody id="top-workers-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Welfare Fund card -->
+        <div>
+          <div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,#006c49,#059669);border:none;color:white;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+              <span class="material-symbols-outlined" style="font-size:22px;font-variation-settings:'FILL' 1;">volunteer_activism</span>
+              <h3 style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;">Worker Welfare Fund</h3>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+              <div>
+                <p style="font-size:11px;opacity:0.75;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Total Collected</p>
+                <p style="font-family:'Plus Jakarta Sans';font-size:24px;font-weight:800;margin-top:4px;">₹1,24,500</p>
+              </div>
+              <div style="text-align:right;">
+                <p style="font-size:11px;opacity:0.75;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Disbursed</p>
+                <p style="font-family:'Plus Jakarta Sans';font-size:24px;font-weight:800;margin-top:4px;">₹42,200</p>
+              </div>
+            </div>
+            <!-- Progress bar -->
+            <div style="background:rgba(255,255,255,0.2);border-radius:999px;height:8px;margin-bottom:6px;">
+              <div style="width:34%;background:white;height:8px;border-radius:999px;"></div>
+            </div>
+            <p style="font-size:12px;opacity:0.85;">34% disbursed · ₹82,300 available</p>
+            <p style="font-size:11px;opacity:0.7;margin-top:6px;">= 10% of all platform revenue processed</p>
+          </div>
+
+          <!-- Fund breakdown -->
+          <div class="card">
+            <h4 style="font-family:'Plus Jakarta Sans';font-size:14px;font-weight:700;color:#191c1e;margin-bottom:14px;">Fund Usage</h4>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="material-symbols-outlined" style="font-size:16px;color:#2563eb;">health_and_safety</span>
+                  <span style="font-size:13px;font-weight:600;">Insurance Premium</span>
+                </div>
+                <span style="font-size:13px;font-weight:700;color:#191c1e;">₹18,400</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="material-symbols-outlined" style="font-size:16px;color:#d97706;">school</span>
+                  <span style="font-size:13px;font-weight:600;">Training Support</span>
+                </div>
+                <span style="font-size:13px;font-weight:700;color:#191c1e;">₹12,600</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="material-symbols-outlined" style="font-size:16px;color:#dc2626;">emergency</span>
+                  <span style="font-size:13px;font-weight:600;">Emergency Aid</span>
+                </div>
+                <span style="font-size:13px;font-weight:700;color:#191c1e;">₹8,200</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="material-symbols-outlined" style="font-size:16px;color:#7c3aed;">construction</span>
+                  <span style="font-size:13px;font-weight:600;">Safety Equipment</span>
+                </div>
+                <span style="font-size:13px;font-weight:700;color:#191c1e;">₹3,000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+const AVCOLORS = ['#004ac6','#006c49','#784b00','#ba1a1a','#5c4db1','#0278ae','#a03b4c'];
+function avc(n){let i=0;for(let c of n)i+=c.charCodeAt(0);return AVCOLORS[i%AVCOLORS.length];}
+function ini(n){return n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();}
+
+const MONTHLY = [
+  {month:'Apr',jobs:210,color:'#bfdbfe'},{month:'May',jobs:264,color:'#93c5fd'},
+  {month:'Jun',jobs:318,color:'#60a5fa'},{month:'Jul',jobs:350,color:'#3b82f6'},
+  {month:'Aug',jobs:412,color:'#2563eb'},{month:'Sep',jobs:288,color:'#1d4ed8'},
+];
+
+const PIE_DATA = [
+  {trade:'Cleaner',pct:20,color:'#059669'},{trade:'Electrician',pct:17,color:'#2563eb'},
+  {trade:'Plumber',pct:15,color:'#0ea5e9'},{trade:'D.Helper',pct:10,color:'#a03b4c'},
+  {trade:'Carpenter',pct:10,color:'#d97706'},{trade:'Driver',pct:9,color:'#7c3aed'},
+  {trade:'Caregiver',pct:7,color:'#EC4899'},{trade:'Painter',pct:6,color:'#f59e0b'},
+  {trade:'Technician',pct:4,color:'#5c4db1'},{trade:'Gardener',pct:2,color:'#10b981'},
+];
+
+const TOP_WORKERS = [
+  {name:'Kishore Kumar',trade:'Electrician',jobs:94,rating:4.9,earnings:'₹47,200'},
+  {name:'Ganesh Mishra', trade:'Plumber',    jobs:87,rating:4.8,earnings:'₹43,500'},
+  {name:'Arjun Rawat',   trade:'Carpenter',  jobs:82,rating:4.7,earnings:'₹41,000'},
+  {name:'Priya Sharma',  trade:'Dom. Helper',jobs:79,rating:4.9,earnings:'₹35,550'},
+  {name:'Ravi Kumar',    trade:'Electrician',jobs:76,rating:4.8,earnings:'₹38,000'},
+  {name:'Ramesh Gupta',  trade:'Driver',     jobs:74,rating:4.6,earnings:'₹33,300'},
+  {name:'Sunita Kumari', trade:'Cleaner',    jobs:68,rating:4.7,earnings:'₹27,200'},
+  {name:'Arun Singh',    trade:'Carpenter',  jobs:65,rating:4.5,earnings:'₹32,500'},
+  {name:'Meena Devi',    trade:'Cleaner',    jobs:61,rating:4.8,earnings:'₹24,400'},
+  {name:'Radha Pandey',  trade:'Gardener',   jobs:58,rating:4.6,earnings:'₹20,300'},
+];
+
+function renderMonthlyChart() {
+  const max = Math.max(...MONTHLY.map(m=>m.jobs));
+  const svgH = 140; const barW = 52; const gap = 20; const W = MONTHLY.length*(barW+gap);
+  let bars='', labels='';
+  MONTHLY.forEach((m,i) => {
+    const h = (m.jobs/max)*(svgH-30);
+    const x = i*(barW+gap);
+    const y = svgH-20-h;
+    bars += `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="8" fill="${m.color}"/>
+      <text x="${x+barW/2}" y="${y-6}" text-anchor="middle" font-size="12" font-weight="700" fill="#191c1e">${m.jobs}</text>`;
+    labels += `<text x="${x+barW/2}" y="${svgH-4}" text-anchor="middle" font-size="11" fill="#434655">${m.month}</text>`;
+  });
+  document.getElementById('monthly-chart').innerHTML =
+    `<svg width="100%" viewBox="0 0 ${W} ${svgH}" style="overflow:visible;">${bars}${labels}</svg>`;
+}
+
+function renderPie() {
+  const cx=80,cy=80,r=60; let total=0; let startAngle=-Math.PI/2;
+  const paths=[]; PIE_DATA.forEach(d=>{total+=d.pct;});
+  PIE_DATA.forEach(d=>{
+    const angle=(d.pct/total)*2*Math.PI;
+    const x1=cx+r*Math.cos(startAngle); const y1=cy+r*Math.sin(startAngle);
+    const x2=cx+r*Math.cos(startAngle+angle); const y2=cy+r*Math.sin(startAngle+angle);
+    const large=angle>Math.PI?1:0;
+    paths.push(`<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} Z" fill="${d.color}"/>`);
+    startAngle+=angle;
+  });
+  document.getElementById('pie-chart').innerHTML = paths.join('')+'<circle cx="80" cy="80" r="32" fill="white"/><text x="80" y="84" text-anchor="middle" font-size="13" font-weight="700" fill="#191c1e">1,842</text>';
+  document.getElementById('pie-legend').innerHTML = PIE_DATA.map(d=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="width:10px;height:10px;border-radius:2px;background:${d.color};display:inline-block;flex-shrink:0;"></span>
+        <span style="font-size:12px;color:#434655;">${d.trade}</span>
+      </div>
+      <span style="font-size:12px;font-weight:700;color:#191c1e;">${d.pct}%</span>
+    </div>`).join('');
+}
+
+function renderTopWorkers() {
+  document.getElementById('top-workers-tbody').innerHTML = TOP_WORKERS.map((w,i)=>`
+    <tr>
+      <td style="font-size:14px;font-weight:700;color:#737686;">${i+1}</td>
+      <td><div style="display:flex;align-items:center;gap:8px;">
+        <div class="avatar" style="background:${avc(w.name)};width:30px;height:30px;font-size:11px;">${ini(w.name)}</div>
+        <span style="font-size:13px;font-weight:600;">${w.name}</span>
+      </div></td>
+      <td style="font-size:12px;color:#434655;">${w.trade}</td>
+      <td style="font-size:13px;font-weight:700;color:#2563eb;">${w.jobs}</td>
+      <td style="font-size:13px;font-weight:700;color:#d97706;">${w.rating}★</td>
+      <td style="font-size:13px;font-weight:700;color:#059669;">${w.earnings}</td>
+    </tr>`).join('');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderSidebar('analytics');
+  renderMonthlyChart();
+  renderPie();
+  renderTopWorkers();
+});
+</script>
+</body>
+</html>

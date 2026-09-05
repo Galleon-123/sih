@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Demand Heatmap — UniServ Organizer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/custom.css"/>
+<style>
+.heatmap-grid { display:grid; gap:6px; }
+.hmap-cell { border-radius:8px; height:52px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:transform 0.1s,box-shadow 0.1s; position:relative; font-size:10px; font-weight:700; color:rgba(0,0,0,0.65); overflow:visible; }
+.hmap-cell:hover { transform:scale(1.06); box-shadow:0 4px 16px rgba(0,0,0,0.18); z-index:5; }
+.cell-tooltip { display:none; position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); background:#191c1e; color:#fff; font-size:11px; font-weight:600; padding:6px 10px; border-radius:8px; white-space:nowrap; z-index:100; line-height:1.5; text-align:center; pointer-events:none; }
+.cell-tooltip::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:#191c1e; }
+.hmap-cell:hover .cell-tooltip { display:block; }
+.time-btn { padding:6px 14px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid #c3c6d7; background:transparent; color:#434655; transition:all 0.15s; font-family:'Work Sans'; }
+.time-btn.active { background:#2563eb; color:#fff; border-color:#2563eb; }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="js/firebase-data.js"></script>
+</head>
+<body>
+<div style="display:flex;min-height:100vh;">
+  <aside id="sidebar" style="display:flex;flex-direction:column;"></aside>
+  <div class="main-content" style="flex:1;">
+    <div class="top-bar">
+      <div>
+        <h2 style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:700;color:#191c1e;">Demand Heatmap</h2>
+        <p style="font-size:13px;color:#434655;">Real-time service demand and artisan shortage zones across Delhi NCR</p>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="time-btn active" onclick="setTime(this,'today')">Today</button>
+        <button class="time-btn" onclick="setTime(this,'week')">This Week</button>
+        <button class="time-btn" onclick="setTime(this,'month')">This Month</button>
+      </div>
+    </div>
+
+    <div style="padding:32px;">
+      <!-- Insight cards -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+        <div style="background:linear-gradient(135deg,#dc2626,#ef4444);border-radius:12px;padding:16px 20px;color:white;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span class="material-symbols-outlined" style="font-size:18px;">trending_up</span>
+            <span style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.06em;">Highest Demand</span>
+          </div>
+          <p style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;" id="kpi-top-demand">Cleaning — South Delhi</p>
+          <p style="font-size:12px;opacity:0.85;margin-top:3px;" id="kpi-top-sub">55 requests today · 4 artisans available</p>
+        </div>
+        <div style="background:linear-gradient(135deg,#d97706,#f59e0b);border-radius:12px;padding:16px 20px;color:white;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span class="material-symbols-outlined" style="font-size:18px;">warning</span>
+            <span style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.06em;">Worker Shortage</span>
+          </div>
+          <p style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;">Plumbers — Dwarka Sector 6</p>
+          <p style="font-size:12px;opacity:0.85;margin-top:3px;">Only 2 plumbers active · 18 requests</p>
+        </div>
+        <div style="background:linear-gradient(135deg,#2563eb,#3b82f6);border-radius:12px;padding:16px 20px;color:white;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span class="material-symbols-outlined" style="font-size:18px;">bolt</span>
+            <span style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.06em;">Peak Zone</span>
+          </div>
+          <p style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;">Connaught Place</p>
+          <p style="font-size:12px;opacity:0.85;margin-top:3px;">Electricians · 45 requests · 3 artisans</p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:24px;">
+        <!-- Heatmap -->
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+            <h3 style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;color:#191c1e;">Zone Demand Map — Delhi NCR</h3>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;" id="service-filters">
+              <button class="filter-chip active" data-svc="all" onclick="setService(this,'all')">All Services</button>
+              <button class="filter-chip" data-svc="Electrician" onclick="setService(this,'Electrician')">Electrician</button>
+              <button class="filter-chip" data-svc="Plumber" onclick="setService(this,'Plumber')">Plumber</button>
+              <button class="filter-chip" data-svc="Cleaner" onclick="setService(this,'Cleaner')">Cleaner</button>
+              <button class="filter-chip" data-svc="Caregiver" onclick="setService(this,'Caregiver')">Caregiver</button>
+              <button class="filter-chip" data-svc="Technician" onclick="setService(this,'Technician')">Technician</button>
+              <button class="filter-chip" data-svc="Driver" onclick="setService(this,'Driver')">Driver</button>
+            </div>
+          </div>
+
+          <!-- Grid heatmap 10x5 -->
+          <div id="heatmap-grid" class="heatmap-grid" style="grid-template-columns:repeat(10,1fr);margin-bottom:16px;"></div>
+
+          <!-- Legend -->
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <span style="font-size:12px;font-weight:600;color:#434655;">Demand Level:</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:16px;height:16px;border-radius:4px;background:#e6e8ea;"></div><span style="font-size:11px;color:#737686;">None</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:16px;height:16px;border-radius:4px;background:#bfdbfe;"></div><span style="font-size:11px;color:#737686;">Low</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:16px;height:16px;border-radius:4px;background:#f59e0b;"></div><span style="font-size:11px;color:#737686;">Medium</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:16px;height:16px;border-radius:4px;background:#ef4444;"></div><span style="font-size:11px;color:#737686;">High</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:16px;height:16px;border-radius:4px;background:#991b1b;"></div><span style="font-size:11px;color:#737686;">Critical</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Zone list -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:16px 20px;border-bottom:1px solid #e6e8ea;display:flex;justify-content:space-between;align-items:center;">
+            <h3 style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;color:#191c1e;">Zone Breakdown</h3>
+            <span class="badge badge-gray" id="zone-count-badge">17 Zones</span>
+          </div>
+          <div style="overflow-y:auto;max-height:380px;">
+            <table class="data-table">
+              <thead><tr><th>Zone</th><th>Demand</th><th>Top Trade</th><th>Available</th></tr></thead>
+              <tbody id="zone-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deploy workers section -->
+      <div class="card" style="margin-top:24px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <h3 style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;color:#191c1e;">Cooperative Dispatch &amp; Rebalancing Recommendations</h3>
+          <button class="btn btn-primary btn-sm" onclick="alert('SMS broadcast sent to idle cooperative workers with priority travel incentive.')">
+            <span class="material-symbols-outlined" style="font-size:16px;">send</span> Broadcast Area Surge Incentive
+          </button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+          <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px;">
+            <p style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;margin-bottom:6px;">⚠ Immediate Rebalancing</p>
+            <p style="font-size:14px;font-weight:700;color:#191c1e;">2 Plumbers → Dwarka Sector 6</p>
+            <p style="font-size:12px;color:#434655;margin-top:3px;">High unmet demand · estimated wait 45 min</p>
+          </div>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;">
+            <p style="font-size:11px;font-weight:700;color:#065f46;text-transform:uppercase;margin-bottom:6px;">✓ Adequate Coverage</p>
+            <p style="font-size:14px;font-weight:700;color:#191c1e;">3 Cleaners — Rohini</p>
+            <p style="font-size:12px;color:#434655;margin-top:3px;">6 workers available · morning peak expected</p>
+          </div>
+          <div style="background:#f0f6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px;">
+            <p style="font-size:11px;font-weight:700;color:#1e40af;text-transform:uppercase;margin-bottom:6px;">↑ Weekend Surge Forecast</p>
+            <p style="font-size:14px;font-weight:700;color:#191c1e;">Electricians — Gurgaon DLF Phase 2</p>
+            <p style="font-size:12px;color:#434655;margin-top:3px;">RWA pre-booking surge expected tomorrow</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+const ZONE_DATA = [
+  { name:'Connaught Pl.', demand:90, color:'#991b1b', label:'Critical', service:'Electrician', workers:3 },
+  { name:'Lajpat Nagar',  demand:80, color:'#dc2626', label:'High',     service:'Plumber',     workers:4 },
+  { name:'Saket',         demand:55, color:'#f59e0b', label:'Medium',   service:'Cleaner',     workers:6 },
+  { name:'Dwarka',        demand:88, color:'#991b1b', label:'Critical', service:'Plumber',     workers:2 },
+  { name:'Rohini',        demand:45, color:'#f59e0b', label:'Medium',   service:'Carpenter',   workers:4 },
+  { name:'Janakpuri',     demand:20, color:'#bfdbfe', label:'Low',      service:'Domestic Helper', workers:5 },
+  { name:'Pitampura',     demand:50, color:'#f59e0b', label:'Medium',   service:'Gardener',    workers:3 },
+  { name:'Vasant Kunj',   demand:72, color:'#ef4444', label:'High',     service:'Painter',     workers:1 },
+  { name:'Shahdara',      demand:18, color:'#bfdbfe', label:'Low',      service:'Driver',      workers:7 },
+  { name:'South Delhi',   demand:85, color:'#dc2626', label:'High',     service:'Cleaner',     workers:4 },
+  { name:'Gr. Noida',     demand:42, color:'#f59e0b', label:'Medium',   service:'Technician',  workers:5 },
+  { name:'Gurgaon',       demand:76, color:'#ef4444', label:'High',     service:'Electrician', workers:3 },
+  { name:'Noida Sec-18',  demand:68, color:'#ef4444', label:'High',     service:'Plumber',     workers:2 },
+  { name:'Faridabad',     demand:15, color:'#bfdbfe', label:'Low',      service:'Domestic Helper', workers:6 },
+  { name:'Ghaziabad',     demand:38, color:'#bfdbfe', label:'Low',      service:'Cleaner',     workers:4 },
+  { name:'Mayur Vihar',   demand:60, color:'#f59e0b', label:'Medium',   service:'Plumber',     workers:3 },
+  { name:'East Delhi',    demand:55, color:'#f59e0b', label:'Medium',   service:'Carpenter',   workers:4 },
+  { name:'West Delhi',    demand:40, color:'#bfdbfe', label:'Low',      service:'Painter',     workers:3 },
+  { name:'North Delhi',   demand:65, color:'#ef4444', label:'High',     service:'Electrician', workers:5 },
+  { name:'Karol Bagh',    demand:0,  color:'#e6e8ea', label:'None',     service:'—',           workers:0 },
+  { name:'Nehru Place',   demand:74, color:'#ef4444', label:'High',     service:'Technician',  workers:2 },
+  { name:'Okhla',         demand:30, color:'#bfdbfe', label:'Low',      service:'Cleaner',     workers:4 },
+  { name:'Patel Nagar',   demand:48, color:'#f59e0b', label:'Medium',   service:'Plumber',     workers:3 },
+  { name:'Shalimar Bagh', demand:22, color:'#bfdbfe', label:'Low',      service:'Gardener',    workers:4 },
+  { name:'Preet Vihar',   demand:0,  color:'#e6e8ea', label:'None',     service:'—',           workers:0 },
+  { name:'Uttam Nagar',   demand:35, color:'#bfdbfe', label:'Low',      service:'Domestic Helper', workers:5 },
+  { name:'Narela',        demand:12, color:'#e6e8ea', label:'None',     service:'—',           workers:2 },
+  { name:'Bawana',        demand:8,  color:'#e6e8ea', label:'None',     service:'—',           workers:1 },
+  { name:'Nangloi',       demand:42, color:'#f59e0b', label:'Medium',   service:'Cleaner',     workers:3 },
+  { name:'Mundka',        demand:28, color:'#bfdbfe', label:'Low',      service:'Carpenter',   workers:2 },
+  { name:'Tagore Garden', demand:0,  color:'#e6e8ea', label:'None',     service:'—',           workers:0 },
+  { name:'Punjabi Bagh',  demand:55, color:'#f59e0b', label:'Medium',   service:'Painter',     workers:2 },
+  { name:'Model Town',    demand:33, color:'#bfdbfe', label:'Low',      service:'Plumber',     workers:3 },
+  { name:'GTB Nagar',     demand:60, color:'#f59e0b', label:'Medium',   service:'Electrician', workers:4 },
+  { name:'Kirti Nagar',   demand:18, color:'#e6e8ea', label:'Low',      service:'Carpenter',   workers:2 },
+  { name:'Palam',         demand:45, color:'#f59e0b', label:'Medium',   service:'Driver',      workers:5 },
+  { name:'Moti Bagh',     demand:62, color:'#ef4444', label:'High',     service:'Cleaner',     workers:3 },
+  { name:'Safdarjung',    demand:80, color:'#dc2626', label:'High',     service:'Technician',  workers:2 },
+  { name:'Malviya Nagar', demand:55, color:'#f59e0b', label:'Medium',   service:'Gardener',    workers:4 },
+  { name:'Chattarpur',    demand:25, color:'#bfdbfe', label:'Low',      service:'Painter',     workers:2 },
+  { name:'S.Delhi Care',  demand:75, color:'#ef4444', label:'High',     service:'Caregiver',   workers:2 },
+  { name:'Gurgaon Sec14', demand:50, color:'#f59e0b', label:'Medium',   service:'Caregiver',   workers:3 },
+];
+
+let currentServiceFilter = 'all';
+
+function renderHeatmap(svc = 'all') {
+  const grid = document.getElementById('heatmap-grid');
+  grid.innerHTML = ZONE_DATA.map(z => {
+    const isMatch = svc === 'all' || z.service.toLowerCase().includes(svc.toLowerCase());
+    const cellColor = isMatch ? z.color : '#e6e8ea';
+    const cellOpacity = isMatch ? (z.demand === 0 ? 0.3 : 0.75 + z.demand * 0.003) : 0.25;
+    return `
+      <div class="hmap-cell" style="background:${cellColor}; opacity:${cellOpacity};">
+        <span>${z.label === 'None' || !isMatch ? '' : z.name.split(' ')[0]}</span>
+        <div class="cell-tooltip">${z.name}<br/>${z.service} · ${z.label}<br/>${z.workers} worker${z.workers!==1?'s':''} avail.</div>
+      </div>`;
+  }).join('');
+}
+
+function renderZoneTable(svc = 'all') {
+  const demandLabel = {
+    Critical:'<span class="badge badge-red">Critical</span>',
+    High:'<span class="badge" style="background:#fee2e2;color:#991b1b;">High</span>',
+    Medium:'<span class="badge badge-amber">Medium</span>',
+    Low:'<span class="badge badge-blue" style="background:#dbeafe;color:#1e40af;">Low</span>',
+    None:'<span class="badge badge-gray">None</span>'
+  };
+
+  const filtered = HEATMAP_ZONES.filter(z => svc === 'all' || z.service.toLowerCase().includes(svc.toLowerCase()));
+  document.getElementById('zone-tbody').innerHTML = filtered.map(z => `
+    <tr>
+      <td style="font-weight:600;font-size:13px;">${z.zone}</td>
+      <td>${demandLabel[z.demand] || '<span class="badge badge-gray">Unknown</span>'}</td>
+      <td style="font-size:13px;">${z.service}</td>
+      <td style="font-size:13px;${z.workers <= 2 ? 'color:#dc2626;font-weight:700;' : ''}">${z.workers}</td>
+    </tr>`).join('');
+  document.getElementById('zone-count-badge').textContent = `${filtered.length} Zones`;
+}
+
+function setTime(btn, t) {
+  document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setService(btn, svc) {
+  document.querySelectorAll('#service-filters [data-svc]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentServiceFilter = svc;
+  renderHeatmap(svc);
+  renderZoneTable(svc);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderSidebar('heatmap');
+  renderHeatmap();
+  renderZoneTable();
+});
+</script>
+</body>
+</html>

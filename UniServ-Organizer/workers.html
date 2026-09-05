@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Workers — UniServ Organizer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/custom.css"/>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="js/firebase-data.js"></script>
+</head>
+<body>
+<div style="display:flex;min-height:100vh;">
+  <aside id="sidebar" style="display:flex;flex-direction:column;"></aside>
+  <div class="main-content" style="flex:1;">
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div>
+        <h2 style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:700;color:#191c1e;">Cooperative Worker Directory</h2>
+        <p style="font-size:13px;color:#434655;">Manage KYC-verified artisans, certification records &amp; trade guild assignments</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="btn btn-primary" onclick="showModal('addWorkerModal')">
+          <span class="material-symbols-outlined" style="font-size:16px;">person_add</span> Register New Artisan
+        </button>
+      </div>
+    </div>
+
+    <div style="padding:32px;">
+      <!-- Search + Filters -->
+      <div class="card" style="margin-bottom:24px;padding:16px 20px;">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;position:relative;">
+            <span class="material-symbols-outlined" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;color:#737686;">search</span>
+            <input type="text" id="search-input" placeholder="Search by name, trade, location, mobile..." class="form-input" style="padding-left:40px;" oninput="filterWorkers()" />
+          </div>
+          <select id="trade-filter" class="form-input" style="width:190px;" onchange="filterWorkers()">
+            <option value="">All 10 Trades</option>
+            <option>Electrician</option><option>Plumber</option><option>Cleaner</option>
+            <option>Carpenter</option><option>Painter</option><option>Caregiver</option>
+            <option>Domestic Helper</option><option>Driver</option><option>Gardener</option><option>Technician</option>
+          </select>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;" id="filter-chips">
+            <button class="filter-chip active" data-filter="all" onclick="setFilter(this,'all')">All (<span id="count-all">20</span>)</button>
+            <button class="filter-chip" data-filter="active" onclick="setFilter(this,'active')">Active</button>
+            <button class="filter-chip" data-filter="pending" onclick="setFilter(this,'pending')">KYC Pending</button>
+            <button class="filter-chip" data-filter="assessment_pending" onclick="setFilter(this,'assessment_pending')">Assessment Due</button>
+            <button class="filter-chip" data-filter="rejected" onclick="setFilter(this,'rejected')">Rejected</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workers Table -->
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:16px 24px;border-bottom:1px solid #e6e8ea;display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <h3 style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;color:#191c1e;">Artisan Roster</h3>
+            <span id="worker-count" class="badge badge-gray">Showing 20</span>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="alert('Exported artisan directory as CSV.')">
+            <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export CSV
+          </button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="workers-table">
+            <thead>
+              <tr>
+                <th style="width:40px;"></th>
+                <th>Artisan Name</th><th>Trade</th><th>District / Area</th><th>Applied</th>
+                <th>Aadhaar KYC</th><th>Trade Assessment</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="workers-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Worker Detail Modal -->
+<div class="modal-overlay" id="workerDetailModal">
+  <div class="modal-box" style="max-width:620px;">
+    <div class="modal-header">
+      <h3 style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:700;" id="modal-worker-name">Worker Details</h3>
+      <button onclick="closeModal('workerDetailModal')" style="background:none;border:none;cursor:pointer;"><span class="material-symbols-outlined" style="font-size:22px;color:#434655;">close</span></button>
+    </div>
+    <div class="modal-body" id="modal-worker-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('workerDetailModal')">Close</button>
+      <button class="btn btn-primary" id="modal-assessment-btn" onclick="location.href='assessment-review.html'">Conduct Assessment Review</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Worker Modal -->
+<div class="modal-overlay" id="addWorkerModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:700;">Register New Artisan</h3>
+      <button onclick="closeModal('addWorkerModal')" style="background:none;border:none;cursor:pointer;"><span class="material-symbols-outlined" style="font-size:22px;color:#434655;">close</span></button>
+    </div>
+    <form onsubmit="handleAddWorker(event)">
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <label class="form-label">Full Name</label>
+            <input class="form-input" id="add-name" placeholder="e.g. Ramu Kaka" required/>
+          </div>
+          <div>
+            <label class="form-label">Phone Number</label>
+            <input class="form-input" id="add-phone" placeholder="98XXXXXXXX" required/>
+          </div>
+          <div>
+            <label class="form-label">Trade / Skill Category</label>
+            <select class="form-input" id="add-trade">
+              <option>Electrician</option><option>Plumber</option><option>Cleaner</option>
+              <option>Carpenter</option><option>Painter</option><option>Caregiver</option>
+              <option>Domestic Helper</option><option>Driver</option><option>Gardener</option><option>Technician</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Location / Ward</label>
+            <input class="form-input" id="add-loc" placeholder="e.g. Lajpat Nagar, Delhi" required/>
+          </div>
+          <div>
+            <label class="form-label">Years of Experience</label>
+            <input class="form-input" id="add-exp" placeholder="e.g. 4 years" required/>
+          </div>
+          <div>
+            <label class="form-label">Certification Status</label>
+            <select class="form-input" id="add-cert">
+              <option value="token">No Certificate — Issue Assessment Token</option>
+              <option value="certified">Certified (ITI / NSDC verified)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('addWorkerModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Enroll Artisan &amp; Generate ID</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+const AVCOLORS = ['#004ac6','#006c49','#784b00','#ba1a1a','#5c4db1','#0278ae','#a03b4c'];
+function avc(n){let i=0;for(let c of n)i+=c.charCodeAt(0);return AVCOLORS[i%AVCOLORS.length];}
+function ini(n){return n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();}
+
+function kycBadge(s){
+  const m={verified:'<span class="badge badge-green">Verified</span>',pending:'<span class="badge badge-amber">Pending</span>',rejected:'<span class="badge badge-red">Rejected</span>'};
+  return m[s]||`<span class="badge badge-gray">${s}</span>`;
+}
+function asmtBadge(s){
+  const m={passed:'<span class="badge badge-green">Passed</span>',pending:'<span class="badge badge-amber">Not Assigned</span>',assigned:'<span class="badge badge-blue">Scheduled</span>',unassigned:'<span class="badge badge-amber">Token Issued</span>',failed:'<span class="badge badge-red">Failed</span>'};
+  return m[s]||`<span class="badge badge-gray">${s}</span>`;
+}
+
+let activeFilter = 'all';
+
+function renderWorkers() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const trade = document.getElementById('trade-filter').value.toLowerCase();
+
+  const filtered = MOCK_WORKERS.filter(w => {
+    const matchSearch = !search || w.name.toLowerCase().includes(search) || w.trade.toLowerCase().includes(search) || w.loc.toLowerCase().includes(search) || (w.phone && w.phone.includes(search));
+    const matchTrade = !trade || w.trade.toLowerCase().includes(trade);
+    const matchFilter = activeFilter === 'all' || w.status === activeFilter;
+    return matchSearch && matchTrade && matchFilter;
+  });
+
+  document.getElementById('workers-tbody').innerHTML = filtered.map(w => `
+    <tr>
+      <td><div class="avatar" style="background:${avc(w.name)};width:32px;height:32px;font-size:12px;">${ini(w.name)}</div></td>
+      <td>
+        <strong>${w.name}</strong>
+        <div style="font-size:11px;color:#737686;">${w.id} · ${w.phone || '9876543210'}</div>
+      </td>
+      <td><strong>${w.trade}</strong></td>
+      <td style="font-size:13px;color:#434655;">${w.loc}</td>
+      <td style="font-size:12px;color:#737686;">${w.applied}</td>
+      <td>${kycBadge(w.kyc)}</td>
+      <td>${asmtBadge(w.assessment)}</td>
+      <td>${statusBadge(w.status)}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="showWorkerDetail('${w.id}')">Profile</button>
+      </td>
+    </tr>`).join('');
+
+  document.getElementById('worker-count').textContent = `Showing ${filtered.length} of ${MOCK_WORKERS.length}`;
+  document.getElementById('count-all').textContent = MOCK_WORKERS.length;
+}
+
+function filterWorkers() { renderWorkers(); }
+
+function setFilter(el, filter) {
+  document.querySelectorAll('#filter-chips .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  activeFilter = filter;
+  renderWorkers();
+}
+
+function showWorkerDetail(id) {
+  const w = MOCK_WORKERS.find(x => x.id === id);
+  if (!w) return;
+  document.getElementById('modal-worker-name').textContent = `${w.name} (${w.id})`;
+  document.getElementById('modal-worker-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div><p class="form-label">Full Name</p><p style="font-size:15px;font-weight:700;">${w.name}</p></div>
+      <div><p class="form-label">Trade Discipline</p><p style="font-size:14px;font-weight:700;color:#2563eb;">${w.trade}</p></div>
+      <div><p class="form-label">Location</p><p style="font-size:13px;">${w.loc}</p></div>
+      <div><p class="form-label">Experience</p><p style="font-size:13px;font-weight:600;">${w.exp || '3 years'}</p></div>
+      <div><p class="form-label">Aadhaar Status</p>${kycBadge(w.kyc)}</div>
+      <div><p class="form-label">Trade Assessment</p>${asmtBadge(w.assessment)}</div>
+      <div><p class="form-label">Account Status</p>${statusBadge(w.status)}</div>
+      <div><p class="form-label">Mobile</p><p style="font-size:13px;font-weight:600;">+91 ${w.phone || '9876543210'}</p></div>
+    </div>
+    <div style="margin-top:16px;padding:12px;background:#f8fafc;border-radius:10px;font-size:12px;color:#434655;">
+      <strong>Lead Cooperative Society:</strong> Delhi Labour Cooperative Federation (MSCS Reg: DL/MSCS/2021/89)
+    </div>`;
+  showModal('workerDetailModal');
+}
+
+function handleAddWorker(e) {
+  e.preventDefault();
+  const name = document.getElementById('add-name').value.trim();
+  const phone = document.getElementById('add-phone').value.trim();
+  const trade = document.getElementById('add-trade').value;
+  const loc = document.getElementById('add-loc').value.trim();
+  const exp = document.getElementById('add-exp').value.trim();
+  const cert = document.getElementById('add-cert').value;
+
+  const id = `WRK-${Math.floor(1030 + Math.random()*200)}`;
+  const newWorker = {
+    id, name, trade, loc,
+    applied: new Date().toISOString().split('T')[0],
+    kyc: 'pending',
+    assessment: cert === 'certified' ? 'passed' : 'unassigned',
+    status: cert === 'certified' ? 'pending' : 'assessment_pending',
+    phone, exp, aadhaar: '****-9922'
+  };
+
+  MOCK_WORKERS.unshift(newWorker);
+  closeModal('addWorkerModal');
+  renderWorkers();
+  alert(`Artisan ${name} registered successfully with ID ${id}!\nVerification credentials logged.`);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderSidebar('workers');
+  // Subscribe to Firestore — replaces mock data with live data
+  if (typeof UniServWorkers !== 'undefined') {
+    UniServWorkers.subscribeAll((workers) => {
+      MOCK_WORKERS.length = 0;
+      workers.forEach((w) => MOCK_WORKERS.push({
+        id: w.id || w.uid,
+        name: w.name || '',
+        trade: w.trade || '',
+        loc: w.locality || w.city || '',
+        applied: w.createdAt?.toDate?.()?.toISOString?.()?.split?.('T')?.[0] || new Date().toISOString().split('T')[0],
+        kyc: w.kycStatus || 'pending',
+        assessment: w.assessmentStatus || 'pending',
+        status: w.status || 'pending',
+        phone: w.phone || '',
+        exp: w.experience || '',
+        aadhaar: w.aadhaarNumber ? '****-' + w.aadhaarNumber.slice(-4) : '****-0000',
+      }));
+      renderWorkers();
+    });
+  } else {
+    renderWorkers(); // fallback to mock
+  }
+});
+</script>
+</body>
+</html>

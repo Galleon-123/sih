@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Complaints — UniServ Organizer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/custom.css"/>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="js/firebase-data.js"></script>
+</head>
+<body>
+<div style="display:flex;min-height:100vh;">
+  <aside id="sidebar" style="display:flex;flex-direction:column;"></aside>
+  <div class="main-content" style="flex:1;">
+    <div class="top-bar">
+      <div>
+        <h2 style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:700;color:#191c1e;">Complaints &amp; Grievances Redressal</h2>
+        <p style="font-size:13px;color:#434655;">Customer disputes, Seva Suraksha warranty claims, and artisan arbitration desk</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="background:#fee2e2;color:#991b1b;font-size:13px;font-weight:700;padding:6px 14px;border-radius:8px;" id="open-complaints-badge">
+          3 Open · Need Attention
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="alert('Complaints report exported as CSV.')">
+          <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export
+        </button>
+      </div>
+    </div>
+
+    <div style="padding:32px;">
+      <!-- Split layout: list + detail -->
+      <div style="display:grid;grid-template-columns:1fr 420px;gap:24px;align-items:start;">
+        <!-- Left: complaints list -->
+        <div>
+          <!-- KPI strip -->
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+            <div class="stat-card" style="border-top:3px solid #dc2626;">
+              <span class="stat-label">Open Grievances</span>
+              <span class="stat-value" id="count-open">3</span>
+              <span class="stat-meta">Awaiting organizer review</span>
+            </div>
+            <div class="stat-card" style="border-top:3px solid #f59e0b;">
+              <span class="stat-label">Under Arbitration</span>
+              <span class="stat-value" id="count-reviewing">3</span>
+              <span class="stat-meta">Cooperative mediator assigned</span>
+            </div>
+            <div class="stat-card" style="border-top:3px solid #059669;">
+              <span class="stat-label">Resolved (30 Days)</span>
+              <span class="stat-value" id="count-resolved">2</span>
+              <span class="stat-meta">Avg turnaround: 1.8 hrs</span>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="card" style="margin-bottom:20px;padding:14px 16px;">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <div style="flex:1;min-width:200px;position:relative;">
+                <span class="material-symbols-outlined" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;color:#737686;">search</span>
+                <input type="text" id="complaint-search" placeholder="Search CMP ID, worker, customer, booking..." class="form-input" style="padding-left:40px;" oninput="filterComplaints()"/>
+              </div>
+              <div style="display:flex;gap:8px;" id="complaint-chips">
+                <button class="filter-chip active" data-f="all" onclick="setCFilter(this,'all')">All</button>
+                <button class="filter-chip" data-f="open" onclick="setCFilter(this,'open')">Open</button>
+                <button class="filter-chip" data-f="reviewing" onclick="setCFilter(this,'reviewing')">Under Review</button>
+                <button class="filter-chip" data-f="resolved" onclick="setCFilter(this,'resolved')">Resolved</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Complaints Table -->
+          <div class="card" style="padding:0;overflow:hidden;">
+            <div style="overflow-x:auto;">
+              <table class="data-table" id="complaints-table">
+                <thead>
+                  <tr>
+                    <th>CMP ID</th><th>Booking</th><th>Customer</th><th>Artisan</th>
+                    <th>Issue Category</th><th>Status</th><th>Date</th><th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="complaints-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: resolution panel -->
+        <div class="card" id="resolution-panel" style="position:sticky;top:24px;">
+          <div id="panel-empty" style="text-align:center;padding:40px 20px;color:#737686;">
+            <span class="material-symbols-outlined" style="font-size:48px;color:#c3c6d7;">inbox</span>
+            <p style="margin-top:12px;font-size:14px;font-weight:600;">Select a complaint to review</p>
+            <p style="font-size:12px;color:#94a3b8;margin-top:4px;">Click 'Review' on any ticket to inspect evidence and disburse Seva Suraksha warranty rework.</p>
+          </div>
+          <div id="panel-content" style="display:none;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <h3 style="font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;color:#191c1e;" id="panel-id"></h3>
+              <span id="panel-badge"></span>
+            </div>
+            <div id="panel-fields" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+
+            <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:12px;margin-bottom:16px;" id="photo-row">
+              <p style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;margin-bottom:4px;">Customer Photographic Evidence</p>
+              <p style="font-size:13px;color:#92400e;">1 photo attached · <span style="text-decoration:underline;cursor:pointer;font-weight:700;" onclick="alert('Viewing customer uploaded photo evidence.')">Inspect Photo</span></p>
+            </div>
+
+            <div style="margin-bottom:16px;">
+              <label class="form-label">Resolution / Seva Suraksha Action Notes</label>
+              <textarea id="resolution-notes" class="form-input" rows="3" placeholder="Describe resolution action taken (e.g. Dispatched replacement master artisan for zero-cost rework)..."></textarea>
+            </div>
+
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-success" style="flex:1;" onclick="resolveComplaint()">
+                <span class="material-symbols-outlined" style="font-size:16px;">check_circle</span> Mark Resolved
+              </button>
+              <button class="btn btn-amber" style="flex:1;" onclick="escalateComplaint()">
+                <span class="material-symbols-outlined" style="font-size:16px;">gavel</span> Arbitrate
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+const COMPLAINTS = [
+  { id:'CMP-0041', booking:'BKG-8810', customer:'Anjali Mehta', worker:'Bharat Sharma', issue:'Work quality / Leakage recurrence', status:'open', date:'2026-09-04', hasPhoto:true, desc:'Bathroom tiles were not sealed properly. Water began seeping into wall within 24 hours.' },
+  { id:'CMP-0040', booking:'BKG-8790', customer:'Rohit Jain', worker:'Mohan Yadav', issue:'Worker delayed arrival', status:'open', date:'2026-09-03', hasPhoto:false, desc:'Worker accepted emergency job but reached 50 minutes past promised ETA.' },
+  { id:'CMP-0039', booking:'BKG-8781', customer:'Sunita Kapoor', worker:'Deepa Rawat', issue:'Extra scope pricing disagreement', status:'open', date:'2026-09-03', hasPhoto:true, desc:'Was billed ₹250 for extra balcony scrub without verbal agreement before starting.' },
+  { id:'CMP-0038', booking:'BKG-8765', customer:'Manoj Tiwari', worker:'Ravi Kumar', issue:'Property damage claim', status:'reviewing', date:'2026-09-02', hasPhoto:true, desc:'Minor crack on decorative switchboard frame during conduit drilling. Claiming ₹1,200 from Seva Suraksha pool.' },
+  { id:'CMP-0037', booking:'BKG-8750', customer:'Pooja Mishra', worker:'Ganesh Mishra', issue:'Incomplete plumbing scope', status:'reviewing', date:'2026-09-02', hasPhoto:false, desc:'Overhead water tank ball valve installed but overflow pipe clamp remains unfastened.' },
+  { id:'CMP-0036', booking:'BKG-8741', customer:'Amit Sharma', worker:'Naresh Pal', issue:'Route deviation delay', status:'reviewing', date:'2026-09-01', hasPhoto:false, desc:'Chauffeur took longer outstation toll route without passenger prior confirmation.' },
+  { id:'CMP-0035', booking:'BKG-8700', customer:'Kavita Singh', worker:'Arjun Rawat', issue:'Hinge realignment rework', status:'resolved', date:'2026-08-31', hasPhoto:false, desc:'Kitchen hydraulic cabinet channel loose. Re-attended at ₹0 under 30-day warranty.' },
+  { id:'CMP-0034', booking:'BKG-8685', customer:'Pradeep Kumar', worker:'Kishore Kumar', issue:'Billing clarification', status:'resolved', date:'2026-08-30', hasPhoto:true, desc:'Customer queried +₹100 overtime surcharge; explained 2-hr overtime policy.' },
+];
+
+const S_BADGE = {
+  open:       '<span class="badge badge-red">Open</span>',
+  reviewing:  '<span class="badge badge-amber">Under Review</span>',
+  resolved:   '<span class="badge badge-green">Resolved</span>',
+};
+
+let cFilter = 'all';
+let selectedCmp = null;
+
+function filterComplaints() {
+  const q = document.getElementById('complaint-search').value.toLowerCase();
+  const filtered = COMPLAINTS.filter(c => {
+    const matchQ = !q || c.id.toLowerCase().includes(q) || c.worker.toLowerCase().includes(q) || c.customer.toLowerCase().includes(q) || c.booking.toLowerCase().includes(q);
+    const matchF = cFilter === 'all' || c.status === cFilter;
+    return matchQ && matchF;
+  });
+
+  document.getElementById('complaints-tbody').innerHTML = filtered.map(c => `
+    <tr style="cursor:pointer;${selectedCmp === c.id ? 'background:#eff6ff;' : ''}" onclick="showPanel('${c.id}')">
+      <td><code style="background:#fee2e2;color:#991b1b;padding:3px 7px;border-radius:4px;font-size:12px;font-weight:700;">${c.id}</code></td>
+      <td><span style="font-size:12px;color:#737686;">${c.booking}</span></td>
+      <td><strong>${c.customer}</strong></td>
+      <td>${c.worker}</td>
+      <td><span style="font-size:13px;">${c.issue}</span></td>
+      <td>${S_BADGE[c.status]}</td>
+      <td style="font-size:12px;color:#737686;">${c.date}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();showPanel('${c.id}')">Review</button></td>
+    </tr>`).join('');
+
+  const openCount = COMPLAINTS.filter(c => c.status === 'open').length;
+  const revCount = COMPLAINTS.filter(c => c.status === 'reviewing').length;
+  const resCount = COMPLAINTS.filter(c => c.status === 'resolved').length;
+
+  document.getElementById('count-open').textContent = openCount;
+  document.getElementById('count-reviewing').textContent = revCount;
+  document.getElementById('count-resolved').textContent = resCount;
+  document.getElementById('open-complaints-badge').textContent = `${openCount} Open · Need Attention`;
+}
+
+function setCFilter(el, f) {
+  document.querySelectorAll('#complaint-chips .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  cFilter = f;
+  filterComplaints();
+}
+
+function showPanel(id) {
+  const c = COMPLAINTS.find(x => x.id === id);
+  if (!c) return;
+  selectedCmp = id;
+  filterComplaints();
+  document.getElementById('panel-empty').style.display = 'none';
+  document.getElementById('panel-content').style.display = 'block';
+  document.getElementById('panel-id').textContent = c.id;
+  document.getElementById('panel-badge').innerHTML = S_BADGE[c.status];
+  document.getElementById('photo-row').style.display = c.hasPhoto ? 'block' : 'none';
+  document.getElementById('panel-fields').innerHTML = [
+    ['Booking Reference', c.booking],
+    ['Customer Name', c.customer],
+    ['Assigned Artisan', c.worker],
+    ['Grievance Type', c.issue],
+    ['Date Reported', c.date],
+  ].map(([k,v]) => `
+    <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #f1f5f9;">
+      <span style="color:#737686;font-weight:600;">${k}</span>
+      <span style="font-weight:700;color:#191c1e;">${v}</span>
+    </div>`).join('') +
+    `<div style="background:#f8fafc;border-radius:8px;padding:10px;margin-top:4px;font-size:13px;color:#434655;line-height:1.5;"><strong>Complaint Statement:</strong><br/>${c.desc}</div>`;
+}
+
+function resolveComplaint() {
+  const notes = document.getElementById('resolution-notes').value;
+  if (!notes.trim()) { alert('Please enter resolution notes describing the action taken.'); return; }
+  const c = COMPLAINTS.find(x => x.id === selectedCmp);
+  if (c) {
+    c.status = 'resolved';
+    alert(`Complaint ${selectedCmp} marked as RESOLVED under Seva Suraksha Guarantee!\nCustomer and artisan notified.`);
+    document.getElementById('resolution-notes').value = '';
+    showPanel(selectedCmp);
+    filterComplaints();
+  }
+}
+
+function escalateComplaint() {
+  const c = COMPLAINTS.find(x => x.id === selectedCmp);
+  if (c) {
+    c.status = 'reviewing';
+    alert(`Complaint ${selectedCmp} escalated to District Cooperative Arbitration Council.`);
+    showPanel(selectedCmp);
+    filterComplaints();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderSidebar('complaints');
+
+  // Subscribe to complaints from Firestore
+  if (typeof UniServComplaints !== 'undefined') {
+    UniServComplaints.subscribeAll((complaints) => {
+      COMPLAINTS.length = 0;
+      complaints.forEach((c) => COMPLAINTS.push({
+        id: c.id,
+        booking: c.bookingId || '',
+        customer: c.userId || 'Customer',
+        worker: c.workerId || 'Worker',
+        category: c.category || 'Issue',
+        description: c.description || '',
+        status: c.status || 'received',
+        date: c.createdAt?.toDate?.()?.toLocaleDateString?.() || '',
+        severity: c.category?.toLowerCase?.().includes?.('safety') ? 'high' : 'medium',
+      }));
+      filterComplaints();
+    });
+  } else {
+    filterComplaints();
+  }
+});
+</script>
+</body>
+</html>

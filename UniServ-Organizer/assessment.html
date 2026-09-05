@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Assessments — UniServ Organizer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/custom.css"/>
+<style>
+.kanban-col { background:#f8fafc; border-radius:14px; border:1px solid #e6e8ea; padding:16px; min-height:400px; }
+.kanban-col-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.kanban-card { background:#fff; border-radius:10px; border:1px solid #e6e8ea; padding:14px; margin-bottom:10px; box-shadow:0 1px 6px rgba(0,0,0,0.04); }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="js/firebase-data.js"></script>
+</head>
+<body>
+<div style="display:flex;min-height:100vh;">
+  <aside id="sidebar" style="display:flex;flex-direction:column;"></aside>
+  <div class="main-content" style="flex:1;">
+    <div class="top-bar">
+      <div>
+        <h2 style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:700;color:#191c1e;">Practical Trade Skill Assessments</h2>
+        <p style="font-size:13px;color:#434655;">Manage non-certified artisan practical evaluation tokens and accreditation testing</p>
+      </div>
+      <button class="btn btn-primary" onclick="showModal('assignModal')">
+        <span class="material-symbols-outlined" style="font-size:16px;">add</span> Assign Assessment Slot
+      </button>
+    </div>
+
+    <div style="padding:32px;">
+      <!-- Stats row -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">
+        <div class="stat-card" style="border-top:3px solid #f59e0b;">
+          <span class="stat-label">Tokens Issued</span>
+          <span class="stat-value" id="stat-unassigned" style="font-size:28px;">8</span>
+          <span class="stat-meta">Awaiting center slot assignment</span>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #2563eb;">
+          <span class="stat-label">Scheduled Slots</span>
+          <span class="stat-value" id="stat-scheduled" style="font-size:28px;">6</span>
+          <span class="stat-meta">At District Co-op Center</span>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #059669;">
+          <span class="stat-label">Completed Tests</span>
+          <span class="stat-value" id="stat-completed" style="font-size:28px;">10</span>
+          <span class="stat-meta">8 Passed · 2 Remedial</span>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #7c3aed;">
+          <span class="stat-label">Guild Pass Rate</span>
+          <span class="stat-value" style="font-size:28px;">80%</span>
+          <span class="stat-meta">MSCS certified benchmark</span>
+        </div>
+      </div>
+
+      <!-- Kanban 3 columns -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+        <!-- Col 1: Unassigned -->
+        <div class="kanban-col">
+          <div class="kanban-col-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>
+              <h3 style="font-family:'Plus Jakarta Sans';font-size:15px;font-weight:700;color:#191c1e;">Token Issued</h3>
+            </div>
+            <span class="badge badge-amber" id="col-count-unassigned">8</span>
+          </div>
+          <div id="col-unassigned"></div>
+        </div>
+
+        <!-- Col 2: Scheduled -->
+        <div class="kanban-col">
+          <div class="kanban-col-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:#2563eb;display:inline-block;"></span>
+              <h3 style="font-family:'Plus Jakarta Sans';font-size:15px;font-weight:700;color:#191c1e;">Scheduled for Test</h3>
+            </div>
+            <span class="badge badge-blue" id="col-count-scheduled">6</span>
+          </div>
+          <div id="col-scheduled"></div>
+        </div>
+
+        <!-- Col 3: Completed -->
+        <div class="kanban-col">
+          <div class="kanban-col-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:#059669;display:inline-block;"></span>
+              <h3 style="font-family:'Plus Jakarta Sans';font-size:15px;font-weight:700;color:#191c1e;">Completed</h3>
+            </div>
+            <span class="badge badge-green" id="col-count-completed">10</span>
+          </div>
+          <div id="col-completed"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Modal -->
+<div class="modal-overlay" id="assignModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:700;">Assign Practical Assessment Slot</h3>
+      <button onclick="closeModal('assignModal')" style="background:none;border:none;cursor:pointer;"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <form onsubmit="handleAssignSlot(event)">
+      <div class="modal-body">
+        <div style="margin-bottom:14px;">
+          <label class="form-label">Select Worker (Token)</label>
+          <select class="form-input" id="assign-worker-select" required></select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div>
+            <label class="form-label">Assessment Date</label>
+            <input type="date" class="form-input" id="assign-date" value="2026-09-05" required/>
+          </div>
+          <div>
+            <label class="form-label">Time Slot</label>
+            <select class="form-input" id="assign-time">
+              <option>09:00 AM</option>
+              <option>10:30 AM</option>
+              <option>12:00 PM</option>
+              <option>02:00 PM</option>
+              <option>03:30 PM</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label class="form-label">Lead Assessor</label>
+          <select class="form-input" id="assign-assessor">
+            <option>Rajesh Kumar — Senior Trade Assessor</option>
+            <option>Sunita Rao — Hygiene &amp; Care Assessor</option>
+            <option>Ramesh Verma — Technical Field Assessor</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Assessment Center Venue</label>
+          <input class="form-input" id="assign-venue" value="Delhi Labour Cooperative Training Academy, Okhla Phase III" required/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('assignModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Confirm Slot &amp; Dispatch SMS</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+const AVCOLORS = ['#004ac6','#006c49','#784b00','#ba1a1a','#5c4db1','#0278ae','#a03b4c'];
+function avc(n){let i=0;for(let c of n)i+=c.charCodeAt(0);return AVCOLORS[i%AVCOLORS.length];}
+function ini(n){return n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();}
+
+function renderKanban() {
+  // Col 1: Unassigned
+  document.getElementById('col-unassigned').innerHTML = ASSESSMENT_TOKENS.map(t => `
+    <div class="kanban-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div class="avatar" style="background:${avc(t.name)};width:34px;height:34px;font-size:12px;">${ini(t.name)}</div>
+        <div style="flex:1;">
+          <p style="font-size:14px;font-weight:700;color:#191c1e;">${t.name}</p>
+          <p style="font-size:12px;color:#434655;">${t.trade}</p>
+        </div>
+        <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:11px;">${t.token}</code>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #f1f5f9;padding-top:8px;">
+        <span style="font-size:11px;color:#737686;">Applied: ${t.applied}</span>
+        <button class="btn btn-primary btn-sm" onclick="openAssignModalFor('${t.token}')">Assign</button>
+      </div>
+    </div>`).join('');
+
+  // Col 2: Scheduled
+  document.getElementById('col-scheduled').innerHTML = ASSESSMENT_SCHEDULED.map(s => `
+    <div class="kanban-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div class="avatar" style="background:${avc(s.name)};width:34px;height:34px;font-size:12px;">${ini(s.name)}</div>
+        <div style="flex:1;">
+          <p style="font-size:14px;font-weight:700;color:#191c1e;">${s.name}</p>
+          <p style="font-size:12px;color:#434655;">${s.trade}</p>
+        </div>
+        <code style="background:#dbeafe;color:#1e40af;padding:2px 6px;border-radius:4px;font-size:11px;">${s.token}</code>
+      </div>
+      <div style="background:#f0f6ff;border-radius:6px;padding:8px;margin-bottom:8px;font-size:11px;color:#1e40af;">
+        <p><strong>Slot:</strong> ${s.date}</p>
+        <p><strong>Assessor:</strong> ${s.assessor}</p>
+      </div>
+      <div style="display:flex;justify-content:flex-end;">
+        <button class="btn btn-success btn-sm" onclick="location.href='assessment-review.html'">Conduct Review →</button>
+      </div>
+    </div>`).join('');
+
+  // Col 3: Completed
+  document.getElementById('col-completed').innerHTML = ASSESSMENT_COMPLETED.map(c => `
+    <div class="kanban-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <div class="avatar" style="background:${avc(c.name)};width:34px;height:34px;font-size:12px;">${ini(c.name)}</div>
+        <div style="flex:1;">
+          <p style="font-size:14px;font-weight:700;color:#191c1e;">${c.name}</p>
+          <p style="font-size:12px;color:#434655;">${c.trade}</p>
+        </div>
+        <span class="badge badge-${c.result==='PASS'?'green':'red'}">${c.result} (${c.score}/100)</span>
+      </div>
+    </div>`).join('');
+
+  // Update counts
+  document.getElementById('stat-unassigned').textContent = ASSESSMENT_TOKENS.length;
+  document.getElementById('col-count-unassigned').textContent = ASSESSMENT_TOKENS.length;
+  document.getElementById('stat-scheduled').textContent = ASSESSMENT_SCHEDULED.length;
+  document.getElementById('col-count-scheduled').textContent = ASSESSMENT_SCHEDULED.length;
+  document.getElementById('stat-completed').textContent = ASSESSMENT_COMPLETED.length;
+  document.getElementById('col-count-completed').textContent = ASSESSMENT_COMPLETED.length;
+
+  // Populate worker dropdown
+  const select = document.getElementById('assign-worker-select');
+  select.innerHTML = ASSESSMENT_TOKENS.map(t => `<option value="${t.token}">${t.token} — ${t.name} (${t.trade})</option>`).join('');
+}
+
+function openAssignModalFor(token) {
+  const select = document.getElementById('assign-worker-select');
+  if (select) select.value = token;
+  showModal('assignModal');
+}
+
+function handleAssignSlot(e) {
+  e.preventDefault();
+  const token = document.getElementById('assign-worker-select').value;
+  const date = document.getElementById('assign-date').value;
+  const time = document.getElementById('assign-time').value;
+  const assessor = document.getElementById('assign-assessor').value.split('—')[0].trim();
+
+  const tokenIdx = ASSESSMENT_TOKENS.findIndex(t => t.token === token);
+  if (tokenIdx !== -1) {
+    const item = ASSESSMENT_TOKENS.splice(tokenIdx, 1)[0];
+    ASSESSMENT_SCHEDULED.unshift({
+      token: item.token,
+      name: item.name,
+      trade: item.trade,
+      date: `${date} ${time}`,
+      assessor,
+    });
+    renderKanban();
+    closeModal('assignModal');
+    alert(`Assessment slot assigned for ${item.name} on ${date} at ${time}!\nSMS alert with venue details dispatched to worker's phone.`);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderSidebar('assessment');
+
+  // Subscribe to all assessments from Firestore
+  if (typeof UniServAssessments !== 'undefined') {
+    UniServAssessments.subscribeAll((assessments) => {
+      ASSESSMENT_TOKENS.length = 0;
+      ASSESSMENT_SCHEDULED.length = 0;
+      ASSESSMENT_COMPLETED.length = 0;
+
+      assessments.forEach((a) => {
+        const entry = { token: a.token, name: a.workerName, trade: a.trade, id: a.workerId, firestoreId: a.id };
+        if (a.status === 'assigned') {
+          entry.applied = a.createdAt?.toDate?.()?.toISOString?.()?.split?.('T')?.[0] || '';
+          ASSESSMENT_TOKENS.push(entry);
+        } else if (a.status === 'scheduled') {
+          entry.date = a.scheduledDate || '';
+          entry.assessor = a.assessor || '';
+          ASSESSMENT_SCHEDULED.push(entry);
+        } else if (a.status === 'completed') {
+          entry.result = a.result === 'pass' ? 'PASS' : 'FAIL';
+          entry.score = a.score || 0;
+          ASSESSMENT_COMPLETED.push(entry);
+        }
+      });
+      renderKanban();
+    });
+  } else {
+    renderKanban();
+  }
+});
+</script>
+</body>
+</html>
