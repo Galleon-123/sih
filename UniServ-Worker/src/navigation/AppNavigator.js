@@ -34,8 +34,8 @@ export const AppNavigator = () => {
   }
 
   const getInitialRoute = () => {
-    if (!isLoggedIn) return 'LanguageSelection';
-    if (worker.verificationStatus !== 'verified') return 'PendingVerification';
+    if (!isLoggedIn || !worker) return 'LanguageSelection';
+    if (worker?.verificationStatus !== 'verified') return 'PendingVerification';
     return 'MainTabs';
   };
 

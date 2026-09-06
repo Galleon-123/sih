@@ -51,11 +51,24 @@ export const WorkerProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    AsyncStorage.getItem('@worker_language')
-      .then((l) => {
+    Promise.all([
+      AsyncStorage.getItem('@worker_language'),
+      AsyncStorage.getItem('@worker_profile'),
+    ])
+      .then(([l, prof]) => {
         if (l) {
           setLanguageState(l);
-          setWorker((prev) => (prev ? { ...prev, language: l } : prev));
+        }
+        if (prof) {
+          try {
+            const parsed = JSON.parse(prof);
+            if (parsed) {
+              simModeRef.current = true;
+              setWorker(parsed);
+              setIsLoggedIn(true);
+              setRegistrationStep(parsed.registrationStep || 'completed');
+            }
+          } catch (e) {}
         }
       })
       .catch(() => {});
@@ -154,12 +167,12 @@ export const WorkerProvider = ({ children }) => {
   const toggleOnline = () => updateWorker({ isOnline: !worker?.isOnline, isAvailable: !worker?.isOnline });
 
   const logout = async () => {
-    await signOut(auth);
+    await signOut(auth).catch(() => {});
     setWorker(null);
     setIsLoggedIn(false);
     setRegistrationStep('language');
     setLanguageState('en');
-    AsyncStorage.removeItem('@worker_language').catch(() => {});
+    AsyncStorage.multiRemove(['@worker_language', '@worker_profile']).catch(() => {});
   };
 
   const getAssessmentToken = () => worker?.assessmentToken || null;
@@ -170,7 +183,9 @@ export const WorkerProvider = ({ children }) => {
     const activeLang = overrideLang || language || 'en';
     setLanguageState(activeLang);
     AsyncStorage.setItem('@worker_language', activeLang).catch(() => {});
-    setWorker({ ...SIM_WORKER, language: activeLang });
+    const demoProfile = { ...SIM_WORKER, language: activeLang };
+    setWorker(demoProfile);
+    AsyncStorage.setItem('@worker_profile', JSON.stringify(demoProfile)).catch(() => {});
     setIsLoggedIn(true);
     setRegistrationStep('completed');
     setIsLoading(false);
