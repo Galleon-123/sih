@@ -119,13 +119,13 @@ export const Screen01_LanguageSelection = ({ navigation }) => {
         </View>
 
         <TouchableOpacity style={styles.continueBtn} onPress={handleContinue} activeOpacity={0.85}>
-          <Text style={styles.continueBtnText}>{t('continueWithHindi', 'Continue / आगे बढ़ें')}</Text>
+          <Text style={styles.continueBtnText}>{t('continueToLogin', 'Continue to Login / आगे बढ़ें')}</Text>
           <Ionicons name="arrow-forward" size={18} color={colors.textInverse} style={{ marginLeft: 8 }} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.demoBtn} onPress={handleDemoLogin} activeOpacity={0.8}>
           <Ionicons name="flask-outline" size={16} color={colors.primary} style={{ marginRight: 8 }} />
-          <Text style={styles.demoBtnText}>{t('demoLogin', 'Demo Login')}</Text>
+          <Text style={styles.demoBtnText}>⚡ {t('demoLogin', 'Demo Worker Login (Instant Test)')}</Text>
         </TouchableOpacity>
 
         <View style={styles.footer}>

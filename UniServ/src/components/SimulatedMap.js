@@ -79,6 +79,8 @@ export const SimulatedMap = ({
     return () => pulse.stop();
   }, []);
 
+  const lastStateRef = useRef({ dist: '', turn: '', speed: '' });
+
   // Moving Vehicle Animation
   useEffect(() => {
     if (!autoStart || mode === 'preview') {
@@ -102,14 +104,21 @@ export const SimulatedMap = ({
       const currentDist = Math.max(0, initialDist * (1 - value)).toFixed(1);
       const currentEta = Math.max(1, Math.ceil(initialEta * (1 - value)));
 
-      setDistance(currentDist);
-      setEta(currentEta);
+      if (lastStateRef.current.dist !== currentDist) {
+        lastStateRef.current.dist = currentDist;
+        setDistance(currentDist);
+        setEta(currentEta);
+      }
 
       // Match turn step
       for (let i = TURN_BY_TURN_STEPS.length - 1; i >= 0; i--) {
         if (value >= TURN_BY_TURN_STEPS[i].at) {
-          setCurrentTurn(TURN_BY_TURN_STEPS[i].turn);
-          setSpeed(TURN_BY_TURN_STEPS[i].speed);
+          if (lastStateRef.current.turn !== TURN_BY_TURN_STEPS[i].turn) {
+            lastStateRef.current.turn = TURN_BY_TURN_STEPS[i].turn;
+            lastStateRef.current.speed = TURN_BY_TURN_STEPS[i].speed;
+            setCurrentTurn(TURN_BY_TURN_STEPS[i].turn);
+            setSpeed(TURN_BY_TURN_STEPS[i].speed);
+          }
           break;
         }
       }

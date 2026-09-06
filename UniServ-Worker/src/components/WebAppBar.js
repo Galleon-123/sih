@@ -27,6 +27,17 @@ export default function WebAppBar() {
             </Text>
           </TouchableOpacity>
         ))}
+        <TouchableOpacity
+          onPress={() => {
+            if (typeof window !== 'undefined') {
+              window.location.hash = '#/language';
+              window.location.reload();
+            }
+          }}
+          style={styles.loginBtn}
+        >
+          <Text style={styles.loginBtnText}>🔑 Worker Login</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -70,6 +81,19 @@ const styles = StyleSheet.create({
   },
   linkTextActive: {
     color: '#fff',
+    fontWeight: '700',
+  },
+  loginBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#10B981',
+    borderWidth: 1,
+    borderColor: '#059669',
+  },
+  loginBtnText: {
+    color: '#fff',
+    fontSize: 13,
     fontWeight: '700',
   },
 });

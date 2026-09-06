@@ -93,27 +93,10 @@ export const WorkerProvider = ({ children }) => {
 
     const bootstrapStorage = async () => {
       try {
-        const [storedLang, storedProfile] = await Promise.all([
-          safeStorage.getItem('@worker_language'),
-          safeStorage.getItem('@worker_profile')
-        ]);
-
+        const storedLang = await safeStorage.getItem('@worker_language');
         if (!isMounted) return;
-
         if (storedLang) {
           setLanguageState(storedLang);
-        }
-
-        if (storedProfile) {
-          try {
-            const parsed = JSON.parse(storedProfile);
-            if (parsed && typeof parsed === 'object') {
-              simModeRef.current = true;
-              setWorker(parsed);
-              setIsLoggedIn(true);
-              setRegistrationStep(parsed.registrationStep || 'completed');
-            }
-          } catch (e) {}
         }
       } catch (err) {
         console.warn('Bootstrap storage error:', err);

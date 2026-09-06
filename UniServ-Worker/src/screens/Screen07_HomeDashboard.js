@@ -57,6 +57,16 @@ export const Screen07_HomeDashboard = ({ navigation }) => {
             <Text style={styles.workerName}>{worker?.name?.split(' ')[0] || 'Worker'} 👋</Text>
           </View>
           <View style={styles.topBarRight}>
+            <TouchableOpacity
+              style={styles.notifBtn}
+              onPress={() => {
+                navigation.navigate('LanguageSelection');
+              }}
+              activeOpacity={0.7}
+              accessibilityLabel="Switch Account / Login"
+            >
+              <Ionicons name="log-out-outline" size={20} color={colors.primary} />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.notifBtn} activeOpacity={0.7}>
               <Ionicons name="notifications-outline" size={22} color={colors.textPrimary} />
             </TouchableOpacity>
