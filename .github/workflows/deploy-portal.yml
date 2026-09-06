@@ -42,26 +42,30 @@ jobs:
       # ── Inject Firebase config into Worker App ────────────────
       - name: Inject Firebase config into Worker App
         run: |
-          sed -i \
-            -e "s|'YOUR_API_KEY'|'${{ secrets.FIREBASE_API_KEY }}'|g" \
-            -e "s|YOUR_PROJECT_ID\.firebaseapp\.com|${{ secrets.FIREBASE_PROJECT_ID }}.firebaseapp.com|g" \
-            -e "s|'YOUR_PROJECT_ID'|'${{ secrets.FIREBASE_PROJECT_ID }}'|g" \
-            -e "s|YOUR_PROJECT_ID\.firebasestorage\.app|${{ secrets.FIREBASE_PROJECT_ID }}.firebasestorage.app|g" \
-            -e "s|'YOUR_MESSAGING_SENDER_ID'|'${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}'|g" \
-            -e "s|'YOUR_WORKER_APP_ID'|'${{ secrets.FIREBASE_WORKER_APP_ID }}'|g" \
-            UniServ-Worker/src/firebase/firebase.js
+          for f in UniServ-Worker/src/firebase/firebase.js UniServ-Worker/src/firebase/firebase.web.js; do
+            sed -i \
+              -e "s|'YOUR_API_KEY'|'${{ secrets.FIREBASE_API_KEY }}'|g" \
+              -e "s|YOUR_PROJECT_ID\.firebaseapp\.com|${{ secrets.FIREBASE_PROJECT_ID }}.firebaseapp.com|g" \
+              -e "s|'YOUR_PROJECT_ID'|'${{ secrets.FIREBASE_PROJECT_ID }}'|g" \
+              -e "s|YOUR_PROJECT_ID\.firebasestorage\.app|${{ secrets.FIREBASE_PROJECT_ID }}.firebasestorage.app|g" \
+              -e "s|'YOUR_MESSAGING_SENDER_ID'|'${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}'|g" \
+              -e "s|'YOUR_WORKER_APP_ID'|'${{ secrets.FIREBASE_WORKER_APP_ID }}'|g" \
+              "$f"
+          done
 
       # ── Inject Firebase config into User App ─────────────────
       - name: Inject Firebase config into User App
         run: |
-          sed -i \
-            -e "s|'YOUR_API_KEY'|'${{ secrets.FIREBASE_API_KEY }}'|g" \
-            -e "s|YOUR_PROJECT_ID\.firebaseapp\.com|${{ secrets.FIREBASE_PROJECT_ID }}.firebaseapp.com|g" \
-            -e "s|'YOUR_PROJECT_ID'|'${{ secrets.FIREBASE_PROJECT_ID }}'|g" \
-            -e "s|YOUR_PROJECT_ID\.firebasestorage\.app|${{ secrets.FIREBASE_PROJECT_ID }}.firebasestorage.app|g" \
-            -e "s|'YOUR_MESSAGING_SENDER_ID'|'${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}'|g" \
-            -e "s|'YOUR_APP_ID'|'${{ secrets.FIREBASE_USER_APP_ID }}'|g" \
-            UniServ/UniServ/src/firebase/firebase.js
+          for f in UniServ/UniServ/src/firebase/firebase.js UniServ/UniServ/src/firebase/firebase.web.js; do
+            sed -i \
+              -e "s|'YOUR_API_KEY'|'${{ secrets.FIREBASE_API_KEY }}'|g" \
+              -e "s|YOUR_PROJECT_ID\.firebaseapp\.com|${{ secrets.FIREBASE_PROJECT_ID }}.firebaseapp.com|g" \
+              -e "s|'YOUR_PROJECT_ID'|'${{ secrets.FIREBASE_PROJECT_ID }}'|g" \
+              -e "s|YOUR_PROJECT_ID\.firebasestorage\.app|${{ secrets.FIREBASE_PROJECT_ID }}.firebasestorage.app|g" \
+              -e "s|'YOUR_MESSAGING_SENDER_ID'|'${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}'|g" \
+              -e "s|'YOUR_APP_ID'|'${{ secrets.FIREBASE_USER_APP_ID }}'|g" \
+              "$f"
+          done
 
       # ── Build Worker App (Expo web) ───────────────────────────
       - name: Install Worker App dependencies
