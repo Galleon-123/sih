@@ -199,6 +199,17 @@ function renderSidebar(activePage) {
       </div>
     </div>
     <nav style="flex:1;padding:16px;overflow-y:auto;">${navHTML}</nav>
+    <div style="padding:12px 16px;border-top:1px solid #c3c6d7;background:#f8f9ff;">
+      <p style="font-size:10px;font-weight:700;color:#8b8fa8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Switch App</p>
+      <div style="display:flex;gap:8px;">
+        <a href="/sih/app/" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;text-decoration:none;color:#1d4ed8;font-size:12px;font-weight:600;">
+          <span class="material-symbols-outlined" style="font-size:15px;font-variation-settings:'FILL' 1;">smartphone</span>User App
+        </a>
+        <a href="/sih/worker/" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;text-decoration:none;color:#15803d;font-size:12px;font-weight:600;">
+          <span class="material-symbols-outlined" style="font-size:15px;font-variation-settings:'FILL' 1;">engineering</span>Worker App
+        </a>
+      </div>
+    </div>
     <div style="padding:16px;border-top:1px solid #c3c6d7;">
       <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#f2f4f6;border-radius:12px;">
         <div class="avatar" style="background:#004ac6;width:36px;height:36px;font-size:13px;">AS</div>

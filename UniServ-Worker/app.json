@@ -37,6 +37,9 @@
         "NSLocationAlwaysUsageDescription": "UniServ Worker needs your location while you are on a job."
       }
     },
+    "experiments": {
+      "baseUrl": "/sih/worker"
+    },
     "plugins": [
       [
         "expo-location",
