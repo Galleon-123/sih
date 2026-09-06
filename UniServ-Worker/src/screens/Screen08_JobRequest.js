@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { useJob } from '../context/JobContext';
 import { useWorker } from '../context/WorkerContext';
+import SimulatedMap from '../components/SimulatedMap';
 
 const DECLINE_REASONS = [
   'Too far away / Traffic congestion',
@@ -124,6 +125,16 @@ export const Screen08_JobRequest = ({ navigation }) => {
             <Text style={styles.activeService}>{activeJob.service}</Text>
             <Text style={styles.activeCustomer}>{activeJob.customerName} · {activeJob.customerArea}</Text>
             <Text style={styles.activeAddress}>{activeJob.customerAddress}</Text>
+
+            <View style={{ marginVertical: 10 }}>
+              <SimulatedMap
+                userAddress={activeJob.customerAddress}
+                customerArea={activeJob.customerArea}
+                serviceName={activeJob.service}
+                autoStart={true}
+                mode="tracking"
+              />
+            </View>
 
             <TouchableOpacity
               style={styles.viewActiveBtn}
@@ -301,6 +312,19 @@ export const Screen08_JobRequest = ({ navigation }) => {
               </ScrollView>
             </View>
           )}
+
+          {/* Worker Convenience Route & Radar Map */}
+          <View style={{ marginVertical: 10 }}>
+            <SimulatedMap
+              customerArea={pendingRequest.customerArea}
+              customerDistance={pendingRequest.distance}
+              serviceName={pendingRequest.service}
+              jobEarnings={pendingRequest.estimatedEarning || 320}
+              mode="worker_accept"
+              showWorkerAcceptControls={false}
+              autoStart={false}
+            />
+          </View>
 
           {/* Earnings Breakdown */}
           <View style={styles.earningBox}>

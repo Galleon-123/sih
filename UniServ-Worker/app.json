@@ -40,6 +40,13 @@
     "experiments": {
       "baseUrl": "/sih/worker"
     },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "name": "UniServ - Worker App",
+      "shortName": "UniServ Worker",
+      "title": "UniServ - Worker App"
+    },
     "plugins": [
       [
         "expo-location",

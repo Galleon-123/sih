@@ -18,19 +18,17 @@ import Screen10_LiveTracking from '../screens/Screen10_LiveTracking';
 import Screen12_WelfareFund from '../screens/Screen12_WelfareFund';
 import Screen13_Insurance from '../screens/Screen13_Insurance';
 import Screen15_DemandHeatmap from '../screens/Screen15_DemandHeatmap';
+import SplashScreen from '../screens/SplashScreen';
 import BottomTabNavigator from './BottomTabNavigator';
 
 const Stack = createNativeStackNavigator();
 
 export const AppNavigator = () => {
   const { isLoggedIn, isLoading, worker } = useWorker();
+  const [showSplash, setShowSplash] = React.useState(true);
 
-  if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
+  if (isLoading && showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
   }
 
   const getInitialRoute = () => {

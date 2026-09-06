@@ -1,13 +1,44 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebase';
 import { getTranslation } from '../i18n/translations';
 
+// Safe In-Memory Storage Fallback
+const memoryStorage = new Map();
+const safeStorage = {
+  getItem: async (key) => {
+    try {
+      const val = await AsyncStorage.getItem(key);
+      if (val !== null) return val;
+      return memoryStorage.get(key) || null;
+    } catch (e) {
+      return memoryStorage.get(key) || null;
+    }
+  },
+  setItem: async (key, val) => {
+    try {
+      memoryStorage.set(key, val);
+      await AsyncStorage.setItem(key, val);
+    } catch (e) {
+      memoryStorage.set(key, val);
+    }
+  },
+  multiRemove: async (keys) => {
+    try {
+      keys.forEach((k) => memoryStorage.delete(k));
+      await AsyncStorage.multiRemove(keys);
+    } catch (e) {
+      keys.forEach((k) => memoryStorage.delete(k));
+    }
+  }
+};
+
 const WorkerContext = createContext();
 
-// ── Simulation / Demo mode ────────────────────────────────────
+// ── Simulation / Demo mode default profile ────────────────────────────────────
 const SIM_WORKER = {
   uid: 'demo-worker-001',
   phone: '9811223344',
@@ -38,11 +69,13 @@ const SIM_WORKER = {
 };
 
 export const WorkerProvider = ({ children }) => {
-  const [worker, setWorker]               = useState(null);
-  const [language, setLanguageState]      = useState('en');
-  const [isLoggedIn, setIsLoggedIn]       = useState(false);
-  const [isLoading, setIsLoading]         = useState(true);
+  const [worker, setWorker]                     = useState(null);
+  const [language, setLanguageState]            = useState('en');
+  const [isLoggedIn, setIsLoggedIn]             = useState(false);
+  const [isLoading, setIsLoading]               = useState(true);
   const [registrationStep, setRegistrationStep] = useState('language');
+
+  const simModeRef = useRef(false);
 
   const t = (key, fallback) => {
     const activeLang = language || worker?.language || 'en';
@@ -50,19 +83,31 @@ export const WorkerProvider = ({ children }) => {
     return (val !== undefined && val !== null && val !== '') ? val : (fallback ?? '');
   };
 
+  // 1. Initial Storage Bootstrap & Web Page Title
   useEffect(() => {
-    Promise.all([
-      AsyncStorage.getItem('@worker_language'),
-      AsyncStorage.getItem('@worker_profile'),
-    ])
-      .then(([l, prof]) => {
-        if (l) {
-          setLanguageState(l);
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      document.title = 'UniServ Worker - Cooperative Artisan Platform';
+    }
+
+    let isMounted = true;
+
+    const bootstrapStorage = async () => {
+      try {
+        const [storedLang, storedProfile] = await Promise.all([
+          safeStorage.getItem('@worker_language'),
+          safeStorage.getItem('@worker_profile')
+        ]);
+
+        if (!isMounted) return;
+
+        if (storedLang) {
+          setLanguageState(storedLang);
         }
-        if (prof) {
+
+        if (storedProfile) {
           try {
-            const parsed = JSON.parse(prof);
-            if (parsed) {
+            const parsed = JSON.parse(storedProfile);
+            if (parsed && typeof parsed === 'object') {
               simModeRef.current = true;
               setWorker(parsed);
               setIsLoggedIn(true);
@@ -70,67 +115,105 @@ export const WorkerProvider = ({ children }) => {
             }
           } catch (e) {}
         }
-      })
-      .catch(() => {});
+      } catch (err) {
+        console.warn('Bootstrap storage error:', err);
+      }
+    };
+
+    bootstrapStorage();
+
+    // Absolute safety timeout: Guarantee bootstrap resolves within 600ms
+    const safetyTimer = setTimeout(() => {
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    }, 600);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(safetyTimer);
+    };
   }, []);
 
-  // ── Auth observer ────────────────────────────────────────────
-  const simModeRef = React.useRef(false);
+  // 2. Auth Observer with Error Fallback
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (simModeRef.current) return; // sim mode active — ignore Firebase
-      if (firebaseUser) {
-        const profile = await _loadOrCreate(firebaseUser.uid, firebaseUser.phoneNumber);
-        setWorker(profile);
-        if (profile?.language) {
-          setLanguageState(profile.language);
-          AsyncStorage.setItem('@worker_language', profile.language).catch(() => {});
+    let unsub = () => {};
+    try {
+      unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+        try {
+          if (simModeRef.current) {
+            setIsLoading(false);
+            return;
+          }
+          if (firebaseUser) {
+            const profile = await _loadOrCreate(firebaseUser.uid, firebaseUser.phoneNumber);
+            setWorker(profile);
+            if (profile?.language) {
+              setLanguageState(profile.language);
+              safeStorage.setItem('@worker_language', profile.language).catch(() => {});
+            }
+            setIsLoggedIn(true);
+            if (profile?.registrationStep) setRegistrationStep(profile.registrationStep);
+          } else {
+            if (!simModeRef.current) {
+              setWorker(null);
+              setIsLoggedIn(false);
+            }
+          }
+        } catch (e) {
+          console.warn('Auth state handler error:', e);
+        } finally {
+          setIsLoading(false);
         }
-        setIsLoggedIn(true);
-        if (profile?.registrationStep) setRegistrationStep(profile.registrationStep);
-      } else {
-        setWorker(null);
-        setIsLoggedIn(false);
-      }
+      });
+    } catch (e) {
+      console.warn('Firebase auth listener failed:', e);
       setIsLoading(false);
-    });
+    }
     return unsub;
   }, []);
 
-  // ── Live profile updates (organizer assigns assessment token) ─
+  // 3. Live profile updates (when authenticated)
   useEffect(() => {
     const uid = auth.currentUser?.uid;
     if (!uid) return;
-    const unsub = onSnapshot(doc(db, 'workers', uid), (snap) => {
-      if (snap.exists()) setWorker(snap.data());
-    });
-    return unsub;
+    try {
+      const unsub = onSnapshot(doc(db, 'workers', uid), (snap) => {
+        if (snap.exists()) setWorker(snap.data());
+      });
+      return unsub;
+    } catch (e) {}
   }, [isLoggedIn]);
 
   const _loadOrCreate = async (uid, phoneNumber) => {
-    const ref = doc(db, 'workers', uid);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) {
-      const phone = (phoneNumber || '').replace('+91', '').replace('+', '');
-      const newProfile = {
-        uid, phone,
-        name: '', trade: '', experience: '', cooperative: '',
-        kycStatus: 'pending', assessmentStatus: 'unassigned',
-        assessmentToken: null, isCertified: false,
-        status: 'pending_verification', isAvailable: false, isOnline: false,
-        rating: 0, jobsCompleted: 0, language: language || 'en',
-        registrationStep: 'nameEntry',
-        earnings: { today: 0, thisMonth: 0, total: 0 },
-        welfare: { thisMonth: 0, total: 0 },
-        insurance: { status: 'pending', validUntil: '', policyNo: '' },
-        certificates: [], aadhaarNumber: '',
-        aadhaarFront: null, aadhaarBack: null, selfie: null,
-        createdAt: serverTimestamp(),
-      };
-      await setDoc(ref, newProfile);
-      return newProfile;
+    try {
+      const ref = doc(db, 'workers', uid);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) {
+        const phone = (phoneNumber || '').replace('+91', '').replace('+', '');
+        const newProfile = {
+          uid, phone,
+          name: '', trade: '', experience: '', cooperative: '',
+          kycStatus: 'pending', assessmentStatus: 'unassigned',
+          assessmentToken: null, isCertified: false,
+          status: 'pending_verification', isAvailable: false, isOnline: false,
+          rating: 0, jobsCompleted: 0, language: language || 'en',
+          registrationStep: 'nameEntry',
+          earnings: { today: 0, thisMonth: 0, total: 0 },
+          welfare: { thisMonth: 0, total: 0 },
+          insurance: { status: 'pending', validUntil: '', policyNo: '' },
+          certificates: [], aadhaarNumber: '',
+          aadhaarFront: null, aadhaarBack: null, selfie: null,
+          createdAt: serverTimestamp(),
+        };
+        await setDoc(ref, newProfile);
+        return newProfile;
+      }
+      return snap.data();
+    } catch (e) {
+      console.warn('Failed _loadOrCreate:', e);
+      return { ...SIM_WORKER, uid, phone: phoneNumber || '9811223344' };
     }
-    return snap.data();
   };
 
   const login = async (uid, phone) => _loadOrCreate(uid, phone);
@@ -139,18 +222,28 @@ export const WorkerProvider = ({ children }) => {
     const uid = auth.currentUser?.uid;
     if (fields.language) {
       setLanguageState(fields.language);
-      AsyncStorage.setItem('@worker_language', fields.language).catch(() => {});
+      safeStorage.setItem('@worker_language', fields.language).catch(() => {});
     }
-    setWorker((prev) => ({ ...prev, ...fields }));
+    setWorker((prev) => {
+      const updated = { ...(prev || SIM_WORKER), ...fields };
+      if (simModeRef.current) {
+        safeStorage.setItem('@worker_profile', JSON.stringify(updated)).catch(() => {});
+      }
+      return updated;
+    });
+
     if (!uid) return;
-    await setDoc(doc(db, 'workers', uid), { ...fields, updatedAt: serverTimestamp() }, { merge: true })
-      .catch((e) => console.warn('Worker update failed:', e));
+    try {
+      await setDoc(doc(db, 'workers', uid), { ...fields, updatedAt: serverTimestamp() }, { merge: true });
+    } catch (e) {
+      console.warn('Worker update failed:', e);
+    }
   };
 
   const setLanguage = async (newLang) => {
     const code = typeof newLang === 'object' ? newLang?.code : (newLang || 'en');
     setLanguageState(code);
-    AsyncStorage.setItem('@worker_language', code).catch(() => {});
+    await safeStorage.setItem('@worker_language', code).catch(() => {});
     setWorker((prev) => (prev ? { ...prev, language: code } : prev));
     const uid = auth.currentUser?.uid;
     if (uid) {
@@ -164,28 +257,39 @@ export const WorkerProvider = ({ children }) => {
     updateWorker({ registrationStep: step });
   };
 
-  const toggleOnline = () => updateWorker({ isOnline: !worker?.isOnline, isAvailable: !worker?.isOnline });
+  const toggleOnline = () => {
+    setWorker((prev) => {
+      const currentOnline = prev?.isOnline || false;
+      const nextOnline = !currentOnline;
+      const updated = { ...(prev || SIM_WORKER), isOnline: nextOnline, isAvailable: nextOnline };
+      if (simModeRef.current) {
+        safeStorage.setItem('@worker_profile', JSON.stringify(updated)).catch(() => {});
+      }
+      return updated;
+    });
+  };
 
   const logout = async () => {
+    simModeRef.current = false;
     await signOut(auth).catch(() => {});
     setWorker(null);
     setIsLoggedIn(false);
     setRegistrationStep('language');
     setLanguageState('en');
-    AsyncStorage.multiRemove(['@worker_language', '@worker_profile']).catch(() => {});
+    await safeStorage.multiRemove(['@worker_language', '@worker_profile']).catch(() => {});
   };
 
   const getAssessmentToken = () => worker?.assessmentToken || null;
 
-  // ── Demo / simulation login — no Firebase calls ───────────────
+  // ── Demo / simulation login — fast & offline-capable ───────────────
   const loginAsDemo = (overrideLang) => {
     simModeRef.current = true;
     const activeLang = overrideLang || language || 'en';
     setLanguageState(activeLang);
-    AsyncStorage.setItem('@worker_language', activeLang).catch(() => {});
+    safeStorage.setItem('@worker_language', activeLang).catch(() => {});
     const demoProfile = { ...SIM_WORKER, language: activeLang };
     setWorker(demoProfile);
-    AsyncStorage.setItem('@worker_profile', JSON.stringify(demoProfile)).catch(() => {});
+    safeStorage.setItem('@worker_profile', JSON.stringify(demoProfile)).catch(() => {});
     setIsLoggedIn(true);
     setRegistrationStep('completed');
     setIsLoading(false);

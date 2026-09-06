@@ -54,12 +54,12 @@ export const Screen12_WelfareFund = ({ navigation }) => {
           <Text style={styles.sectionTitle}>{t('myWelfareContributions', 'My Welfare Contributions')}</Text>
           <View style={styles.contribRow}>
             <View style={styles.contribItem}>
-              <Text style={styles.contribValue}>₹{worker.welfare?.thisMonth || 180}</Text>
+              <Text style={styles.contribValue}>₹{worker?.welfare?.thisMonth || 180}</Text>
               <Text style={styles.contribLabel}>{t('thisMonth', 'This Month')}</Text>
             </View>
             <View style={styles.contribDivider} />
             <View style={styles.contribItem}>
-              <Text style={styles.contribValue}>₹{worker.welfare?.total?.toLocaleString() || '2,400'}</Text>
+              <Text style={styles.contribValue}>₹{worker?.welfare?.total?.toLocaleString() || '2,400'}</Text>
               <Text style={styles.contribLabel}>{t('totalContributed', 'Total Contributed')}</Text>
             </View>
             <View style={styles.contribDivider} />

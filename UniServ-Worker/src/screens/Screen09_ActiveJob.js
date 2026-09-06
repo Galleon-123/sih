@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { useJob } from '../context/JobContext';
 import { useWorker } from '../context/WorkerContext';
+import SimulatedMap from '../components/SimulatedMap';
 
 const JOB_STAGES = [
   { id: 'travelling', labelKey: 'enRoute', label: 'En Route', icon: 'car-outline' },
@@ -297,6 +298,18 @@ export const Screen09_ActiveJob = ({ navigation }) => {
               <Ionicons name="car-sport" size={32} color={colors.primary} />
               <Text style={styles.stageActionTitle}>{t('enRouteCustomer', 'En Route to Customer')}</Text>
               <Text style={styles.stageActionSub}>{t('enRouteSub', "Follow GPS navigation. When you arrive at the customer's doorstep, tap below to request the Start OTP.")}</Text>
+              
+              <View style={{ width: '100%', marginBottom: 14 }}>
+                <SimulatedMap
+                  userAddress={activeJob.customerAddress}
+                  customerArea={activeJob.customerArea}
+                  serviceName={activeJob.service}
+                  autoStart={true}
+                  mode="tracking"
+                  onArrival={() => updateJobStatus('arrived')}
+                />
+              </View>
+
               <TouchableOpacity
                 style={styles.primaryActionBtn}
                 onPress={() => updateJobStatus('arrived')}

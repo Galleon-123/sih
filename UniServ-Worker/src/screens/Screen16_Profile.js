@@ -10,7 +10,7 @@ import LANGUAGES from '../data/languages.json';
 export const Screen16_Profile = ({ navigation }) => {
   const { worker, logout, language, t } = useWorker();
 
-  const currentLangObj = LANGUAGES.find((l) => l.code === (language || worker.language || 'en')) || LANGUAGES[0];
+  const currentLangObj = LANGUAGES.find((l) => l.code === (language || worker?.language || 'en')) || LANGUAGES[0];
 
   const handleLogout = () => {
     Alert.alert(
