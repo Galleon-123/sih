@@ -27,8 +27,11 @@
           <span style="width:8px;height:8px;border-radius:50%;background:#059669;display:inline-block;"></span>
           67 Active Now
         </div>
-        <button class="btn btn-outline btn-sm">
+        <button class="btn btn-outline btn-sm" onclick="exportBookingsCSV()">
           <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="simulateNewBooking()" style="background:#7c3aed;border-color:#7c3aed;">
+          <span class="material-symbols-outlined" style="font-size:16px;">add_circle</span> Simulate Booking
         </button>
       </div>
     </div>
@@ -95,7 +98,7 @@
             <thead>
               <tr>
                 <th>Booking ID</th><th>Service</th><th>Customer Area</th>
-                <th>Worker</th><th>Status</th><th>Amount</th><th>Booking Type</th><th>Source</th><th>Warranty</th><th>Created</th><th>Actions</th>
+                <th>Worker</th><th>Status</th><th>Amount</th><th>Channel</th><th>Type</th><th>Warranty</th><th>Created</th><th>Actions</th>
               </tr>
             </thead>
             <tbody id="bookings-tbody"></tbody>
@@ -170,8 +173,8 @@ function renderBookings() {
       <td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="background:${avatarColor(b.worker)};width:28px;height:28px;font-size:11px;">${initials(b.worker)}</div>${b.worker}</div></td>
       <td>${STATUS_BADGE[b.status] || b.status}</td>
       <td><strong>₹${b.amount}</strong>${b.overtime ? ' <span class="badge badge-amber" style="font-size:10px;">+₹100 OT</span>':''}</td>
-      <td>${TYPE_BADGE[b.booking_type] || b.booking_type}</td>
       <td>${b.source==='ivrs' ? '<span class="badge badge-blue">📞 IVRS</span>' : '<span class="badge badge-gray">App</span>'}</td>
+      <td>${TYPE_BADGE[b.booking_type] || b.booking_type || '—'}</td>
       <td>${b.warranty ? '<span class="badge badge-green">🛡 30-day</span>' : '<span style="color:#b0b3c0;font-size:12px;">—</span>'}</td>
       <td style="font-size:12px;color:#737686;">${b.created}</td>
       <td>
@@ -200,8 +203,8 @@ function showBookingDetail(id) {
       <div><p class="form-label">Status</p>${STATUS_BADGE[b.status]}</div>
       <div><p class="form-label">Worker</p><p style="font-size:14px;font-weight:600;">${b.worker}</p></div>
       <div><p class="form-label">Customer Area</p><p style="font-size:14px;">${b.area}</p></div>
-      <div><p class="form-label">Booking Type</p>${TYPE_BADGE[b.booking_type]}</div>
-      <div><p class="form-label">Source</p>${b.source==='ivrs'?'<span class="badge badge-blue">📞 IVRS / Phone</span>':'<span class="badge badge-gray">App</span>'}</div>
+      <div><p class="form-label">Channel</p>${b.source==='ivrs'?'<span class="badge badge-blue">📞 IVRS / Phone</span>':'<span class="badge badge-gray">📱 App</span>'}</div>
+      <div><p class="form-label">Booking Type</p>${TYPE_BADGE[b.booking_type] || b.booking_type || '—'}</div>
       <div><p class="form-label">Amount</p><p style="font-size:15px;font-weight:700;color:#059669;">₹${b.amount}${b.overtime?' <span style="font-size:12px;color:#d97706;">(incl. +₹100 OT)</span>':''}</p></div>
       <div><p class="form-label">Seva Suraksha</p>${b.warranty?'<span class="badge badge-green">🛡 Active — 30-day warranty</span>':'<span style="color:#737686;font-size:13px;">—</span>'}</div>
       <div><p class="form-label">OTP Handshake</p><span class="badge badge-blue">${b.otp_status}</span></div>
@@ -212,6 +215,63 @@ function showBookingDetail(id) {
   showModal('bookingDetailModal');
 }
 
+function exportBookingsCSV() {
+  const headers = ['ID','Service','Area','Worker','Status','Amount','Type','Source','Warranty','Created'];
+  const rows = BOOKINGS.map(b => [b.id, b.service, b.area, b.worker, b.status, b.amount, b.booking_type, b.source, b.warranty ? 'Yes' : 'No', b.created]);
+  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'bookings_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+const SIM_SERVICES = [
+  { service:'Electrical Repair', serviceType:'electrician' },
+  { service:'Pipe Leakage Fix', serviceType:'plumber' },
+  { service:'Deep Home Cleaning', serviceType:'cleaner' },
+  { service:'Furniture Repair', serviceType:'carpenter' },
+  { service:'AC Servicing', serviceType:'technician' },
+  { service:'Garden Maintenance', serviceType:'gardener' },
+  { service:'Interior Painting', serviceType:'painter' },
+  { service:'Daily Kitchen Help', serviceType:'domestic_helper' },
+];
+const SIM_AREAS   = ['Lajpat Nagar','Dwarka','Saket','Rohini','Hauz Khas','Vasant Kunj','Pitampura','Connaught Place'];
+const SIM_WORKERS = ['Ravi Kumar','Ganesh Mishra','Meena Devi','Arjun Rawat','Priya Sharma','Dinesh Tiwari'];
+const SIM_TYPES   = ['now','now','scheduled','emergency'];
+let   _simSeq     = 8800;
+
+function simulateNewBooking() {
+  const svc    = SIM_SERVICES[Math.floor(Math.random() * SIM_SERVICES.length)];
+  const area   = SIM_AREAS[Math.floor(Math.random() * SIM_AREAS.length)];
+  const worker = SIM_WORKERS[Math.floor(Math.random() * SIM_WORKERS.length)];
+  const type   = SIM_TYPES[Math.floor(Math.random() * SIM_TYPES.length)];
+  const amount = [300,350,400,450,500,550,600,700,800,900,1000,1200][Math.floor(Math.random() * 12)];
+  _simSeq++;
+  const entry = {
+    id: 'BKG-' + _simSeq,
+    service: svc.service,
+    serviceType: svc.serviceType,
+    area,
+    worker,
+    status: 'active',
+    amount,
+    booking_type: type,
+    source: Math.random() > 0.7 ? 'ivrs' : 'app',
+    warranty: false,
+    overtime: false,
+    created: new Date().toLocaleString(),
+    otp_status: 'Booking Confirmed',
+  };
+  BOOKINGS.unshift(entry);
+  renderBookings();
+  // Flash the first row green briefly
+  const firstRow = document.querySelector('#bookings-tbody tr');
+  if (firstRow) {
+    firstRow.style.background = '#d1fae5';
+    setTimeout(() => { firstRow.style.background = ''; }, 1500);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   renderSidebar('bookings');
 
@@ -219,19 +279,29 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof UniServBookings !== 'undefined') {
     UniServBookings.subscribeAll((bookings) => {
       BOOKINGS.length = 0;
-      const statusLabels = ['Confirmed', 'Worker Assigned', 'On the Way', 'Arrived', 'In Progress', 'Completed'];
-      bookings.forEach((b) => BOOKINGS.push({
-        id: b.bookingId || b.id,
-        service: b.service?.name || b.serviceName || 'Service',
-        customer: b.userName || b.userId || 'Customer',
-        worker: b.workerName || b.workerId || 'Assigned',
-        address: b.address || '',
-        time: b.createdAt?.toDate?.()?.toLocaleTimeString?.() || '',
-        date: b.createdAt?.toDate?.()?.toLocaleDateString?.() || '',
-        amount: b.total_amount || b.totalAmount || 0,
-        status: statusLabels[b.status] || 'Confirmed',
-        payment: b.payment_status === 'success' ? 'Paid' : 'Pending',
-      }));
+      bookings.forEach((b) => {
+        const numStatus = typeof b.status === 'number' ? b.status : -1;
+        const statusKey = numStatus === 5 ? 'completed' : numStatus === 0 ? 'cancelled' : numStatus >= 1 ? 'active' : (b.status || 'active');
+        const createdDate = b.createdAt ? new Date(typeof b.createdAt === 'string' ? b.createdAt : b.createdAt.toDate?.() || b.createdAt) : null;
+        BOOKINGS.push({
+          id: b.id || b.bookingId,
+          service: b.service?.name || b.service || b.serviceName || 'Service',
+          customer: b.customerName || b.userName || b.userId || 'Customer',
+          worker: b.workerName || b.workerId || 'Assigned',
+          area: b.area || b.address || '',
+          time: createdDate ? createdDate.toLocaleTimeString() : '',
+          date: createdDate ? createdDate.toLocaleDateString() : '',
+          amount: b.amount || b.total_amount || b.totalAmount || 0,
+          status: statusKey,
+          booking_type: b.booking_type || b.bookingType || 'now',
+          source: b.source || 'app',
+          warranty: b.warranty || false,
+          overtime: b.overtime || false,
+          created: createdDate ? createdDate.toLocaleString() : '',
+          otp_status: b.otp_status || b.otpStatus || 'Booking Confirmed',
+          payment: (b.payment_status === 'success' || b.paymentStatus === 'success') ? 'Paid' : 'Pending',
+        });
+      });
       renderBookings();
     });
   } else {

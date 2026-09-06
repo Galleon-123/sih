@@ -1,0 +1,100 @@
+[
+  {
+    "id": "coop1",
+    "name": "South Delhi District Labour Cooperative Federation",
+    "registration_no": "MSCS/CR/2019/DL-482 (NCCT Affiliated)",
+    "head_name": "Shri Ramesh Chandra Varma",
+    "head_designation": "Federation President & District Ward Coordinator",
+    "head_photo": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&q=80",
+    "phone": "+91 98101 23456",
+    "email": "southdelhi.coop@gov.in",
+    "office_address": "Cooperative Bhawan, Sector 4, R.K. Puram, New Delhi - 110022",
+    "fleet_size": "75+ Certified Artisans",
+    "rating": 4.9,
+    "completed_bulk_contracts": 142,
+    "ward_coverage": "South Delhi, Lajpat Nagar, Saket, Hauz Khas, Greater Kailash",
+    "bulk_services": [
+      {
+        "id": "bs1",
+        "title": "Overhead & Underground Water Tank Cleaning",
+        "capacity": "5,000L to 50,000L",
+        "icon": "water",
+        "base_estimate": "₹1,499 onwards",
+        "description": "High-pressure descaling, sludge extraction, and UV antibacterial sterilization for apartment complexes & RWAs."
+      },
+      {
+        "id": "bs2",
+        "title": "Society Electrical Earthing & Safety Audit",
+        "capacity": "Complete Society Grid",
+        "icon": "flash",
+        "base_estimate": "₹2,499 onwards",
+        "description": "Transformer testing, main breaker thermal audit, common lighting wiring and lightning arrester verification."
+      },
+      {
+        "id": "bs3",
+        "title": "Pre-Monsoon Society Drainage & Desilting",
+        "capacity": "Perimeter & Stormwater Drains",
+        "icon": "construct",
+        "base_estimate": "₹3,999 onwards",
+        "description": "De-clogging stormwater channels, sewer line jetting, and manhole chamber restoration before heavy rains."
+      },
+      {
+        "id": "bs4",
+        "title": "Society Solar Panel Array Washing & Maintenance",
+        "capacity": "10 kW to 200 kW Rooftops",
+        "icon": "sunny",
+        "base_estimate": "₹1,999 onwards",
+        "description": "De-ionized water scrubbing, inverter health checks, and junction box terminal tightening."
+      },
+      {
+        "id": "bs5",
+        "title": "Gated Society Common Area Deep Clean Drive",
+        "capacity": "Clubhouse, Corridors & Stilt Parking",
+        "icon": "sparkles",
+        "base_estimate": "₹2,999 onwards",
+        "description": "Industrial scrubbing machines, basement grease removal, and eco-friendly sanitized pressure washing."
+      },
+      {
+        "id": "bs6",
+        "title": "Perimeter Wall & Society Exterior Painting Contract",
+        "capacity": "Custom Sq. Ft. Estimate",
+        "icon": "color-palette",
+        "base_estimate": "Inspection-based Quote",
+        "description": "Anti-fungal exterior coating, boundary wall painting, and structural crack waterproofing."
+      }
+    ]
+  },
+  {
+    "id": "coop2",
+    "name": "Central Delhi Workers & Artisans Welfare Cooperative",
+    "registration_no": "DL-COOP/2021/719",
+    "head_name": "Smt. Kamala Devi",
+    "head_designation": "Secretary & Women's Sanitation Guild Head",
+    "head_photo": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&q=80",
+    "phone": "+91 98112 87654",
+    "email": "centraldelhi.labour@coop.org",
+    "office_address": "Shramik Seva Kendra, Pusa Road, Karol Bagh, New Delhi - 110005",
+    "fleet_size": "50+ Certified Women Artisans",
+    "rating": 4.8,
+    "completed_bulk_contracts": 98,
+    "ward_coverage": "Central Delhi, Karol Bagh, Connaught Place, Patel Nagar",
+    "bulk_services": [
+      {
+        "id": "bs5",
+        "title": "Gated Society Common Area Deep Clean Drive",
+        "capacity": "Clubhouse, Corridors & Stilt Parking",
+        "icon": "sparkles",
+        "base_estimate": "₹2,999 onwards",
+        "description": "Industrial scrubbing machines, basement grease removal, and eco-friendly sanitized pressure washing."
+      },
+      {
+        "id": "bs1",
+        "title": "Overhead & Underground Water Tank Cleaning",
+        "capacity": "5,000L to 50,000L",
+        "icon": "water",
+        "base_estimate": "₹1,499 onwards",
+        "description": "High-pressure descaling, sludge extraction, and UV antibacterial sterilization."
+      }
+    ]
+  }
+]

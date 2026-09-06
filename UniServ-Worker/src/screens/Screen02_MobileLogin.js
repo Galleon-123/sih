@@ -97,16 +97,16 @@ export const Screen02_MobileLogin = ({ navigation }) => {
             <View style={styles.iconCircle}>
               <Ionicons name="phone-portrait" size={30} color={colors.primary} />
             </View>
-            <Text style={styles.title}>Worker Registration</Text>
+            <Text style={styles.title}>{t('workerLoginTitle', 'Cooperative Worker Login')}</Text>
             <Text style={styles.subtitle}>
-              {otpSent ? `OTP sent to +91 ${phone}` : 'Enter your mobile number to begin registration'}
+              {otpSent ? `OTP sent to +91 ${phone}` : t('workerLoginSub', 'Enter registered mobile number for instant OTP verification.')}
             </Text>
           </View>
 
           <View style={styles.card}>
             {!otpSent ? (
               <View>
-                <Text style={styles.label}>Mobile Number</Text>
+                <Text style={styles.label}>{t('mobileNumber', 'Mobile Number')}</Text>
                 <View style={styles.phoneRow}>
                   <View style={styles.prefix}>
                     <Text style={styles.flag}>🇮🇳</Text>
@@ -125,16 +125,16 @@ export const Screen02_MobileLogin = ({ navigation }) => {
                 {error ? <Text style={styles.error}>{error}</Text> : null}
                 <TouchableOpacity style={styles.btn} onPress={sendOtp} disabled={loading}>
                   {loading ? <ActivityIndicator color="#FFF" />
-                    : <Text style={styles.btnText}>Send OTP</Text>}
+                    : <Text style={styles.btnText}>{t('sendOtp', 'Send OTP')}</Text>}
                 </TouchableOpacity>
               </View>
             ) : (
               <View>
                 <View style={styles.smsBanner}>
                   <Ionicons name="chatbubble-ellipses" size={14} color={colors.primary} />
-                  <Text style={styles.smsBannerText}>Check your SMS inbox for the 6-digit code</Text>
+                  <Text style={styles.smsBannerText}>{t('enterOtp', 'Enter the 6-digit OTP code sent to your mobile')}</Text>
                 </View>
-                <Text style={styles.label}>Enter OTP</Text>
+                <Text style={styles.label}>{t('enterOtp', 'Enter OTP')}</Text>
                 <View style={styles.otpRow}>
                   {[0,1,2,3,4,5].map((idx) => (
                     <TextInput
@@ -152,12 +152,12 @@ export const Screen02_MobileLogin = ({ navigation }) => {
                 {error ? <Text style={styles.error}>{error}</Text> : null}
                 <TouchableOpacity style={styles.btn} onPress={verify} disabled={loading}>
                   {loading ? <ActivityIndicator color="#FFF" />
-                    : <Text style={styles.btnText}>Verify & Continue</Text>}
+                    : <Text style={styles.btnText}>{t('verifyProceed', 'Verify & Enter Workspace')}</Text>}
                 </TouchableOpacity>
                 <View style={styles.resendRow}>
                   {timer > 0
-                    ? <Text style={styles.timer}>Resend in {timer}s</Text>
-                    : <TouchableOpacity onPress={sendOtp}><Text style={styles.resendLink}>Resend OTP</Text></TouchableOpacity>
+                    ? <Text style={styles.timer}>{t('resendIn', 'Resend in')} {timer}s</Text>
+                    : <TouchableOpacity onPress={sendOtp}><Text style={styles.resendLink}>{t('resendOtp', 'Resend OTP')}</Text></TouchableOpacity>
                   }
                   <TouchableOpacity onPress={() => { setOtpSent(false); setDigits(['','','','','','']); }}>
                     <Text style={styles.changeNum}>Change Number</Text>

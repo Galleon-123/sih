@@ -15,13 +15,13 @@ const ASSESSMENT_INSTRUCTIONS = [
 ];
 
 export const Screen05b_AssessmentToken = ({ navigation }) => {
-  const { updateWorker, generateAssessmentToken, generateWorkerId, worker } = useWorker();
+  const { updateWorker, generateAssessmentToken, generateWorkerId, worker, t } = useWorker();
   const [token, setToken] = useState('');
   const [workerId, setWorkerId] = useState('');
 
   useEffect(() => {
-    const newToken = generateAssessmentToken();
-    const newWorkerId = generateWorkerId();
+    const newToken = generateAssessmentToken ? generateAssessmentToken() : 'TOK-2026-987';
+    const newWorkerId = generateWorkerId ? generateWorkerId() : 'UW-2026-001';
     setToken(newToken);
     setWorkerId(newWorkerId);
     updateWorker({
@@ -42,16 +42,16 @@ export const Screen05b_AssessmentToken = ({ navigation }) => {
           <View style={styles.successCircle}>
             <Ionicons name="checkmark-circle" size={48} color={colors.success} />
           </View>
-          <Text style={styles.headerTitle}>Assessment Scheduled!</Text>
+          <Text style={styles.headerTitle}>{t('assessmentTokenTitle', 'Assessment Scheduled!')}</Text>
           <Text style={styles.headerSubtitle}>
-            Your registration is complete. Keep your assessment token safe.
+            {t('tokenInstructions', 'Show this token to the Cooperative Organizer at the training hub for physical assessment.')}
           </Text>
         </View>
 
         <View style={styles.tokenCard}>
           <View style={styles.tokenCardHeader}>
             <Ionicons name="ticket-outline" size={20} color={colors.primary} />
-            <Text style={styles.tokenCardHeaderText}>Your Assessment Token</Text>
+            <Text style={styles.tokenCardHeaderText}>{t('yourAssessmentToken', 'Your Assessment Token')}</Text>
           </View>
           <View style={styles.tokenDisplay}>
             <Text style={styles.tokenText}>{token}</Text>
@@ -61,9 +61,9 @@ export const Screen05b_AssessmentToken = ({ navigation }) => {
             <Text style={styles.workerIdValue}>{workerId}</Text>
           </View>
           <View style={styles.tradeRow}>
-            <Text style={styles.tradeLabel}>Trade:</Text>
+            <Text style={styles.tradeLabel}>{t('selectTrade', 'Trade')}:</Text>
             <View style={styles.tradeBadge}>
-              <Text style={styles.tradeText}>{worker.tradeType?.toUpperCase() || 'ELECTRICIAN'}</Text>
+              <Text style={styles.tradeText}>{worker?.tradeType?.toUpperCase() || 'ELECTRICIAN'}</Text>
             </View>
           </View>
         </View>

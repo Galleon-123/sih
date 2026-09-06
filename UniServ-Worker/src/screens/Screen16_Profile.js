@@ -52,75 +52,75 @@ export const Screen16_Profile = ({ navigation }) => {
               <Ionicons name="person" size={40} color={colors.primary} />
             </View>
             <View style={styles.onlineBadge}>
-              <View style={[styles.onlineDot, worker.isOnline && styles.onlineDotActive]} />
+              <View style={[styles.onlineDot, worker?.isOnline && styles.onlineDotActive]} />
             </View>
           </View>
-          <Text style={styles.workerName}>{worker.name}</Text>
+          <Text style={styles.workerName}>{worker?.name || 'Ravi Kumar'}</Text>
           <View style={styles.tradeBadge}>
             <Ionicons name="flash" size={14} color={colors.textInverse} />
-            <Text style={styles.tradeText}>{worker.tradeType?.charAt(0).toUpperCase() + worker.tradeType?.slice(1)}</Text>
+            <Text style={styles.tradeText}>{t(`trade${worker?.trade ? worker.trade.charAt(0).toUpperCase() + worker.trade.slice(1) : 'Electrician'}`, worker?.trade || 'Electrician')}</Text>
           </View>
           <View style={styles.starsRow}>
-            {renderStars(worker.rating)}
-            <Text style={styles.ratingText}>{worker.rating} ({worker.totalJobs} reviews)</Text>
+            {renderStars(worker?.rating || 4.7)}
+            <Text style={styles.ratingText}>{worker?.rating || 4.7} ({worker?.jobsCompleted || 142} reviews)</Text>
           </View>
           <View style={styles.idRow}>
-            <Text style={styles.idText}>{worker.workerId}</Text>
+            <Text style={styles.idText}>{worker?.uid || 'UW-2026-001'}</Text>
             <Text style={styles.idSep}>·</Text>
-            <Text style={styles.idText}>{worker.cooperative}</Text>
+            <Text style={styles.idText}>{worker?.cooperative || 'Delhi Electrical Workers Co-op'}</Text>
           </View>
         </View>
 
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{worker.totalJobs}</Text>
-            <Text style={styles.statLabel}>Total Jobs</Text>
+            <Text style={styles.statValue}>{worker?.jobsCompleted || 142}</Text>
+            <Text style={styles.statLabel}>{t('totalJobs', 'Total Jobs')}</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>₹{(worker.earnings?.total / 1000).toFixed(0)}K</Text>
-            <Text style={styles.statLabel}>Total Earned</Text>
+            <Text style={styles.statValue}>₹{((worker?.earnings?.total || 94500) / 1000).toFixed(0)}K</Text>
+            <Text style={styles.statLabel}>{t('totalEarned', 'Total Earned')}</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{worker.experience}</Text>
-            <Text style={styles.statLabel}>Experience</Text>
+            <Text style={styles.statValue}>{worker?.experience || '5 years'}</Text>
+            <Text style={styles.statLabel}>{t('experience', 'Experience')}</Text>
           </View>
         </View>
 
         <View style={styles.certSection}>
-          <Text style={styles.sectionTitle}>Skill Certificates</Text>
-          {worker.isCertified ? (
+          <Text style={styles.sectionTitle}>{t('skillCertificates', 'Skill Certificates')}</Text>
+          {worker?.isCertified ? (
             <View style={styles.certCard}>
               <View style={styles.certIcon}>
                 <Ionicons name="ribbon" size={24} color={colors.success} />
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={styles.certName}>Trade Certificate</Text>
-                <Text style={styles.certIssuer}>Verified by Cooperative Organizer</Text>
+                <Text style={styles.certName}>{t('tradeCertificate', 'Trade Certificate')}</Text>
+                <Text style={styles.certIssuer}>{t('verifiedByOrganizer', 'Verified by Cooperative Organizer')}</Text>
               </View>
               <Ionicons name="checkmark-circle" size={22} color={colors.success} />
             </View>
-          ) : worker.assessmentToken ? (
+          ) : worker?.assessmentToken ? (
             <View style={styles.assessmentCard}>
               <Ionicons name="time" size={20} color={colors.warning} />
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={styles.assessmentTitle}>Practical Assessment</Text>
+                <Text style={styles.assessmentTitle}>{t('practicalAssessment', 'Practical Assessment')}</Text>
                 <Text style={styles.assessmentToken}>Token: {worker.assessmentToken}</Text>
-                <Text style={styles.assessmentStatus}>Pending assessment assignment</Text>
+                <Text style={styles.assessmentStatus}>{t('pendingAssessment', 'Pending assessment assignment')}</Text>
               </View>
             </View>
           ) : (
-            <Text style={styles.noCerts}>No certificates uploaded yet.</Text>
+            <Text style={styles.noCerts}>{t('noCerts', 'No certificates uploaded yet.')}</Text>
           )}
         </View>
 
         <View style={styles.infoSection}>
-          <Text style={styles.sectionTitle}>Personal Information</Text>
+          <Text style={styles.sectionTitle}>{t('personalInfo', 'Personal Information')}</Text>
           <View style={styles.infoCard}>
-            <InfoRow icon="call-outline" label="Mobile" value={`+91 ${worker.phone}`} />
-            <InfoRow icon="id-card-outline" label="Aadhaar" value="XXXX XXXX 1234" />
-            <InfoRow icon="business-outline" label="Cooperative" value={worker.cooperative} />
-            <InfoRow icon="calendar-outline" label="Member Since" value="Sep 2026" />
-            <InfoRow icon="location-outline" label="City" value="New Delhi" last />
+            <InfoRow icon="call-outline" label={t('mobile', 'Mobile')} value={`+91 ${worker?.phone || '9811223344'}`} />
+            <InfoRow icon="id-card-outline" label={t('aadhaar', 'Aadhaar')} value="XXXX XXXX 1234" />
+            <InfoRow icon="business-outline" label={t('cooperative', 'Cooperative')} value={worker?.cooperative || 'Delhi Labour Co-op'} />
+            <InfoRow icon="calendar-outline" label={t('memberSince', 'Member Since')} value="Sep 2026" />
+            <InfoRow icon="location-outline" label={t('city', 'City')} value="New Delhi" last />
           </View>
         </View>
 
@@ -134,40 +134,40 @@ export const Screen16_Profile = ({ navigation }) => {
               <Ionicons name="language" size={18} color={colors.primary} />
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={styles.langRowTitle}>App Language / भाषा बदलें</Text>
+              <Text style={styles.langRowTitle}>{t('appLanguage', 'App Language')} / भाषा बदलें</Text>
               <Text style={styles.langRowSub}>{currentLangObj.name} ({currentLangObj.nativeName})</Text>
             </View>
             <View style={styles.changeBadge}>
-              <Text style={styles.changeBadgeText}>Change</Text>
+              <Text style={styles.changeBadgeText}>{t('changeLanguage', 'Change')}</Text>
             </View>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.editBtn} activeOpacity={0.85}>
             <Ionicons name="pencil-outline" size={18} color={colors.textInverse} />
-            <Text style={styles.editBtnText}>Edit Profile</Text>
+            <Text style={styles.editBtnText}>{t('editProfile', 'Edit Profile')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.settingsRow} activeOpacity={0.7}>
             <Ionicons name="settings-outline" size={18} color={colors.textSecondary} />
-            <Text style={styles.settingsText}>Settings</Text>
+            <Text style={styles.settingsText}>{t('settings', 'Settings')}</Text>
             <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.settingsRow} activeOpacity={0.7}>
             <Ionicons name="help-circle-outline" size={18} color={colors.textSecondary} />
-            <Text style={styles.settingsText}>Help & Support</Text>
+            <Text style={styles.settingsText}>{t('helpSupport', 'Help & Support')}</Text>
             <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.settingsRow} activeOpacity={0.7}>
             <Ionicons name="document-text-outline" size={18} color={colors.textSecondary} />
-            <Text style={styles.settingsText}>Terms & Privacy</Text>
+            <Text style={styles.settingsText}>{t('termsPrivacy', 'Terms & Privacy')}</Text>
             <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.85}>
             <Ionicons name="log-out-outline" size={18} color={colors.danger} />
-            <Text style={styles.logoutBtnText}>Logout</Text>
+            <Text style={styles.logoutBtnText}>{t('logout', 'Logout')}</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.versionText}>UniServ Worker v1.0.0 · Ministry of Cooperation</Text>
+        <Text style={styles.versionText}>{t('mscsCompliant', 'UniServ Worker v1.0.0 · Ministry of Cooperation')}</Text>
       </ScrollView>
     </SafeAreaView>
   );

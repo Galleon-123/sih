@@ -14,7 +14,14 @@ const BENEFITS = [
 ];
 
 export const Screen12_WelfareFund = ({ navigation }) => {
-  const { worker } = useWorker();
+  const { worker, t } = useWorker();
+
+  const benefitsList = [
+    { id: 'insurance', label: t('insurance', 'Insurance'), status: t('active', 'Active'), icon: 'shield-checkmark', color: colors.success, bg: colors.successLight },
+    { id: 'training', label: t('trainingSupport', 'Training Support'), status: t('eligible', 'Eligible'), icon: 'school', color: colors.primary, bg: colors.primarySubtle },
+    { id: 'emergency', label: t('emergencyAssistance', 'Emergency Assistance'), status: t('available', 'Available'), icon: 'medkit', color: colors.warning, bg: colors.warningLight },
+    { id: 'safety', label: t('safetyEquipment', 'Safety Equipment'), status: t('provided', 'Provided'), icon: 'construct', color: colors.cooperative, bg: colors.cooperativeLight },
+  ];
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -23,14 +30,14 @@ export const Screen12_WelfareFund = ({ navigation }) => {
           <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.pageTitle}>Worker Welfare Fund</Text>
+          <Text style={styles.pageTitle}>{t('welfareFund', 'Worker Welfare Fund')}</Text>
           <View style={{ width: 40 }} />
         </View>
 
         <View style={styles.fundCard}>
           <View style={styles.fundHeader}>
             <View>
-              <Text style={styles.fundLabel}>Cooperative Fund Balance</Text>
+              <Text style={styles.fundLabel}>{t('cooperativeFundBalance', 'Cooperative Fund Balance')}</Text>
               <Text style={styles.fundAmount}>₹50,000</Text>
             </View>
             <View style={styles.fundIcon}>
@@ -39,36 +46,36 @@ export const Screen12_WelfareFund = ({ navigation }) => {
           </View>
           <View style={styles.fundNote}>
             <Ionicons name="information-circle-outline" size={14} color='rgba(255,255,255,0.8)' />
-            <Text style={styles.fundNoteText}>Pooled fund managed by Delhi Labour Cooperative Society</Text>
+            <Text style={styles.fundNoteText}>{t('pooledFundDesc', 'Pooled fund managed by Delhi Labour Cooperative Society')}</Text>
           </View>
         </View>
 
         <View style={styles.contributionsCard}>
-          <Text style={styles.sectionTitle}>My Welfare Contributions</Text>
+          <Text style={styles.sectionTitle}>{t('myWelfareContributions', 'My Welfare Contributions')}</Text>
           <View style={styles.contribRow}>
             <View style={styles.contribItem}>
               <Text style={styles.contribValue}>₹{worker.welfare?.thisMonth || 180}</Text>
-              <Text style={styles.contribLabel}>This Month</Text>
+              <Text style={styles.contribLabel}>{t('thisMonth', 'This Month')}</Text>
             </View>
             <View style={styles.contribDivider} />
             <View style={styles.contribItem}>
               <Text style={styles.contribValue}>₹{worker.welfare?.total?.toLocaleString() || '2,400'}</Text>
-              <Text style={styles.contribLabel}>Total Contributed</Text>
+              <Text style={styles.contribLabel}>{t('totalContributed', 'Total Contributed')}</Text>
             </View>
             <View style={styles.contribDivider} />
             <View style={styles.contribItem}>
               <Text style={styles.contribValue}>₹50</Text>
-              <Text style={styles.contribLabel}>Per Job (10%)</Text>
+              <Text style={styles.contribLabel}>{t('perJob', 'Per Job (10%)')}</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.recentCard}>
-          <Text style={styles.sectionTitle}>Recent Contributions</Text>
+          <Text style={styles.sectionTitle}>{t('recentContributions', 'Recent Contributions')}</Text>
           {[
-            { label: "Today's job (Electrical Repair)", amount: 50 },
-            { label: 'This week (4 jobs)', amount: 200 },
-            { label: 'Last week (5 jobs)', amount: 250 },
+            { label: t('todayJobContribution', "Today's job (Electrical Repair)"), amount: 50 },
+            { label: t('thisWeekJobs', 'This week (4 jobs)'), amount: 200 },
+            { label: t('lastWeekJobs', 'Last week (5 jobs)'), amount: 250 },
           ].map((item, i) => (
             <View key={i} style={styles.recentRow}>
               <View style={styles.recentDot} />
@@ -78,8 +85,8 @@ export const Screen12_WelfareFund = ({ navigation }) => {
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>Your Benefits</Text>
-        {BENEFITS.map((b) => (
+        <Text style={styles.sectionTitle}>{t('yourBenefits', 'Your Benefits')}</Text>
+        {benefitsList.map((b) => (
           <View key={b.id} style={[styles.benefitCard, { borderLeftColor: b.color }]}>
             <View style={[styles.benefitIcon, { backgroundColor: b.bg }]}>
               <Ionicons name={b.icon} size={22} color={b.color} />
@@ -92,19 +99,19 @@ export const Screen12_WelfareFund = ({ navigation }) => {
               </View>
             </View>
             <TouchableOpacity style={styles.learnMoreBtn} activeOpacity={0.7}>
-              <Text style={styles.learnMoreText}>Details</Text>
+              <Text style={styles.learnMoreText}>{t('details', 'Details')}</Text>
             </TouchableOpacity>
           </View>
         ))}
 
         <View style={styles.howItWorksCard}>
-          <Text style={styles.howTitle}>How the Welfare Fund Works</Text>
+          <Text style={styles.howTitle}>{t('howFundWorks', 'How the Welfare Fund Works')}</Text>
           {[
-            { step: '1', text: 'Customer pays for service (e.g. ₹500)' },
-            { step: '2', text: '₹50 is automatically allocated to the Welfare & Healthcare Fund (10%)' },
-            { step: '3', text: 'You receive ₹400 in your wallet (80%)' },
-            { step: '4', text: 'Fund is used for insurance, training, and emergency support' },
-            { step: '5', text: 'All eligible workers benefit from the pooled fund' },
+            { step: '1', text: t('fundStep1', 'Customer pays for service (e.g. ₹500)') },
+            { step: '2', text: t('fundStep2', '₹50 is automatically allocated to the Welfare & Healthcare Fund (10%)') },
+            { step: '3', text: t('fundStep3', 'You receive ₹400 in your wallet (80%)') },
+            { step: '4', text: t('fundStep4', 'Fund is used for insurance, training, and emergency support') },
+            { step: '5', text: t('fundStep5', 'All eligible workers benefit from the pooled fund') },
           ].map((item) => (
             <View key={item.step} style={styles.howRow}>
               <View style={styles.howStepBadge}>
@@ -118,8 +125,8 @@ export const Screen12_WelfareFund = ({ navigation }) => {
         <View style={styles.withdrawalNote}>
           <Ionicons name="lock-closed" size={16} color={colors.danger} />
           <Text style={styles.withdrawalNoteText}>
-            <Text style={{ fontWeight: '700' }}>Important: </Text>
-            Welfare fund contributions cannot be withdrawn like regular earnings. They are pooled to provide collective benefits to all cooperative workers.
+            <Text style={{ fontWeight: '700' }}>{t('important', 'Important')}: </Text>
+            {t('welfareNote', 'Welfare fund contributions cannot be withdrawn like regular earnings. They are pooled to provide collective benefits to all cooperative workers.')}
           </Text>
         </View>
       </ScrollView>

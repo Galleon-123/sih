@@ -11,7 +11,7 @@ import { useWorker } from '../context/WorkerContext';
 const EXPERIENCE_OPTIONS = ['Less than 1 year', '1-2 years', '3-5 years', '5-10 years', 'More than 10 years'];
 
 export const Screen05a_UploadCertificates = ({ navigation }) => {
-  const { updateWorker, generateWorkerId } = useWorker();
+  const { updateWorker, generateWorkerId, t } = useWorker();
   const [certImage, setCertImage] = useState(null);
   const [certName, setCertName] = useState('');
   const [issuingBody, setIssuingBody] = useState('');
@@ -34,7 +34,7 @@ export const Screen05a_UploadCertificates = ({ navigation }) => {
   };
 
   const handleSubmit = async () => {
-    const workerId = generateWorkerId();
+    const workerId = generateWorkerId ? generateWorkerId() : 'UW-2026-001';
     await updateWorker({
       workerId,
       certificates: [{ name: certName || 'Trade Certificate', uri: certImage, issuingBody }],
@@ -55,13 +55,13 @@ export const Screen05a_UploadCertificates = ({ navigation }) => {
           <View style={styles.iconCircle}>
             <Ionicons name="document-text" size={28} color={colors.primary} />
           </View>
-          <Text style={styles.title}>Upload Certificates</Text>
-          <Text style={styles.subtitle}>Upload your trade certification and provide details for verification.</Text>
+          <Text style={styles.title}>{t('uploadCertBtn', 'Upload Certificates')}</Text>
+          <Text style={styles.subtitle}>{t('certCheckSub', 'Upload your trade certification and provide details for verification.')}</Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Certificate Details</Text>
-          <Text style={styles.label}>Certificate Name</Text>
+          <Text style={styles.sectionTitle}>{t('tradeCertificate', 'Certificate Details')}</Text>
+          <Text style={styles.label}>{t('tradeCertificate', 'Certificate Name')}</Text>
           <TextInput
             style={styles.input}
             placeholder="e.g. ITI Electrician Certificate"
@@ -79,7 +79,7 @@ export const Screen05a_UploadCertificates = ({ navigation }) => {
           />
         </View>
 
-        <Text style={styles.sectionTitle}>Certificate Upload</Text>
+        <Text style={styles.sectionTitle}>{t('uploadCertBtn', 'Certificate Upload')}</Text>
         <TouchableOpacity
           style={[styles.uploadBox, certImage && styles.uploadBoxDone]}
           onPress={pickCertificate}
@@ -90,20 +90,20 @@ export const Screen05a_UploadCertificates = ({ navigation }) => {
               <Image source={{ uri: certImage }} style={styles.certPreview} />
               <View style={styles.uploadedBadge}>
                 <Ionicons name="checkmark-circle" size={18} color={colors.success} />
-                <Text style={styles.uploadedText}>Certificate Uploaded</Text>
+                <Text style={styles.uploadedText}>{t('uploaded', 'Certificate Uploaded')}</Text>
               </View>
               <Text style={styles.tapRetake}>Tap to change</Text>
             </View>
           ) : (
             <View style={styles.uploadEmptyWrap}>
               <Ionicons name="cloud-upload-outline" size={40} color={colors.primary} />
-              <Text style={styles.uploadEmptyLabel}>Upload Certificate</Text>
+              <Text style={styles.uploadEmptyLabel}>{t('uploadCertBtn', 'Upload Certificate')}</Text>
               <Text style={styles.uploadEmptyHint}>JPG, PNG — Max 5MB</Text>
             </View>
           )}
         </TouchableOpacity>
 
-        <Text style={styles.sectionTitle}>Work Experience</Text>
+        <Text style={styles.sectionTitle}>{t('experience', 'Work Experience')}</Text>
         <View style={styles.experienceGrid}>
           {EXPERIENCE_OPTIONS.map((opt) => (
             <TouchableOpacity
@@ -127,7 +127,7 @@ export const Screen05a_UploadCertificates = ({ navigation }) => {
         </View>
 
         <TouchableOpacity style={styles.btn} onPress={handleSubmit} activeOpacity={0.85}>
-          <Text style={styles.btnText}>Submit for Verification</Text>
+          <Text style={styles.btnText}>{t('proceedToPending', 'Submit for Verification')}</Text>
           <Ionicons name="checkmark-circle" size={16} color={colors.textInverse} style={{ marginLeft: 8 }} />
         </TouchableOpacity>
       </ScrollView>

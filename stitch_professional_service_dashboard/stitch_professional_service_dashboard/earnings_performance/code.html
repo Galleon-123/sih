@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Earnings &amp; Performance - ProPartner</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&amp;family=Work+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-background": "#191c1e",
+                      "on-primary": "#ffffff",
+                      "inverse-surface": "#2d3133",
+                      "secondary": "#006c49",
+                      "primary": "#004ac6",
+                      "on-primary-fixed-variant": "#003ea8",
+                      "on-secondary-fixed": "#002113",
+                      "surface-container-highest": "#e0e3e5",
+                      "surface": "#f7f9fb",
+                      "error-container": "#ffdad6",
+                      "tertiary-fixed": "#ffddb8",
+                      "on-surface-variant": "#434655",
+                      "on-secondary": "#ffffff",
+                      "primary-fixed-dim": "#b4c5ff",
+                      "on-tertiary-fixed-variant": "#653e00",
+                      "on-tertiary-container": "#ffeedd",
+                      "on-primary-container": "#eeefff",
+                      "surface-dim": "#d8dadc",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-fixed-variant": "#005236",
+                      "primary-container": "#2563eb",
+                      "surface-variant": "#e0e3e5",
+                      "outline-variant": "#c3c6d7",
+                      "on-primary-fixed": "#00174b",
+                      "on-surface": "#191c1e",
+                      "inverse-on-surface": "#eff1f3",
+                      "tertiary-container": "#996100",
+                      "surface-container-high": "#e6e8ea",
+                      "surface-tint": "#0053db",
+                      "surface-container": "#eceef0",
+                      "tertiary-fixed-dim": "#ffb95f",
+                      "on-error-container": "#93000a",
+                      "error": "#ba1a1a",
+                      "tertiary": "#784b00",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-fixed-dim": "#4edea3",
+                      "primary-fixed": "#dbe1ff",
+                      "secondary-fixed": "#6ffbbe",
+                      "outline": "#737686",
+                      "on-error": "#ffffff",
+                      "surface-container-low": "#f2f4f6",
+                      "secondary-container": "#6cf8bb",
+                      "inverse-primary": "#b4c5ff",
+                      "on-secondary-container": "#00714d",
+                      "on-tertiary-fixed": "#2a1700",
+                      "background": "#f7f9fb",
+                      "surface-bright": "#f7f9fb"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sm": "12px",
+                      "margin-desktop": "48px",
+                      "lg": "40px",
+                      "md": "24px",
+                      "xs": "4px",
+                      "xl": "64px",
+                      "margin-mobile": "16px",
+                      "base": "8px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Work Sans"
+                      ],
+                      "label-md": [
+                              "Work Sans"
+                      ],
+                      "headline-lg-mobile": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "body-md": [
+                              "Work Sans"
+                      ],
+                      "label-sm": [
+                              "Work Sans"
+                      ],
+                      "headline-lg": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-md": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-xl": [
+                              "Plus Jakarta Sans"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-xl": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "800"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+      </style>
+</head>
+<body class="bg-background text-on-background antialiased pb-[80px] md:pb-0">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky bg-surface shadow-sm z-40 hidden md:flex">
+<div class="flex justify-between items-center px-margin-desktop h-16 w-full max-w-[1280px] mx-auto">
+<div class="font-headline-md text-headline-md font-extrabold text-primary">ProPartner</div>
+<nav class="flex space-x-6">
+<a class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">work</span>
+<span class="font-label-md text-label-md">Jobs</span>
+</a>
+<a class="text-primary font-bold hover:text-primary transition-colors flex items-center gap-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-label-md text-label-md">Earnings</span>
+</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95 duration-100">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<img alt="Worker Profile Avatar" class="w-10 h-10 rounded-full object-cover shadow-sm border border-outline-variant/30" data-alt="A close up, professional headshot of a diverse worker in a well-lit, modern indoor environment. The lighting is bright and cheerful, evoking a sense of trust and approachability. The background is slightly blurred but suggests a clean, contemporary setting with subtle off-white tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLXu9dxStWdcRhETS-rbWvD0Gx_Yxocb14iFvziQ8iLNlSxNHX9i1epsWge3t-_c_pqNBh8-nyX9pfRdcKOi9ZsBnb7srTjnw7fV-l0j5UUVBKVzL3fG5f-ZUKbt_0iw5UqdxO4xlBzeNajIoV_2hVW9TM-CyG6otqFSi6-8cyW3xeewknzjSNQFkgthTstZN3vU-3lgu42xaO2N6Ge2T0RXyFTtR12MrLdcBdsmmBumxhmeEkILofWw"/>
+</div>
+</div>
+</header>
+<!-- Mobile TopAppBar -->
+<header class="w-full top-0 sticky bg-surface shadow-sm z-40 md:hidden">
+<div class="flex justify-between items-center px-margin-mobile h-16 w-full">
+<img alt="Worker Profile Avatar" class="w-8 h-8 rounded-full object-cover shadow-sm border border-outline-variant/30" data-alt="A close up, professional headshot of a diverse worker in a well-lit, modern indoor environment. The lighting is bright and cheerful, evoking a sense of trust and approachability. The background is slightly blurred but suggests a clean, contemporary setting with subtle off-white tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiCJhGq_kplPKO-0xTjbTHRQlYTTaes763THaugEWZvZbbMEBaz_kMHJe7xNBl1HH2IIfkdxCppa6lZ3FjgBIeW3-mwvr6ZnuYgtzodVDW0qGW4LxdTmtBC4HNSAnogog19rukxuPgSjmob3bXQ7N0Zvtxcw7UyEOlE0s81dXq4-Zfq7MKgYG7a3GYMyE1nmtnb5IHTrUvhUyAdPsQCFje7LEhki1rhqhtY-DlWyHWAMLojbZ9kbsKWw"/>
+<div class="font-headline-md text-headline-md font-extrabold text-primary">ProPartner</div>
+<button class="text-on-surface-variant hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95 duration-100">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</div>
+</header>
+<main class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-lg">
+<!-- Header Section -->
+<section class="mb-lg flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-xs">Earnings &amp; Performance</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Track your progress and financial goals.</p>
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-2 rounded-lg bg-surface-container border border-outline-variant/30 font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors">This Week</button>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Main Earnings Display -->
+<div class="lg:col-span-8 flex flex-col gap-gutter">
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] p-md flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+<div class="flex justify-between items-start mb-xl relative z-10">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant mb-xs uppercase tracking-wider">Total Earnings (This Week)</p>
+<h2 class="font-headline-xl text-headline-xl text-on-surface">$1,245.50</h2>
+</div>
+<div class="flex items-center gap-1 bg-secondary-container/30 text-on-secondary-container px-3 py-1.5 rounded-lg border border-secondary-container/50 shadow-sm">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+<span class="font-label-md text-label-md">+12.5%</span>
+</div>
+</div>
+<!-- Placeholder for Chart -->
+<div class="w-full h-48 bg-surface-container/30 rounded-lg relative overflow-hidden border border-outline-variant/20 flex items-end">
+<!-- Simulated Bar Chart -->
+<div class="flex justify-between items-end w-full h-full p-4 gap-2">
+<div class="w-full bg-primary/20 rounded-t-sm h-[40%] hover:bg-primary/40 transition-colors"></div>
+<div class="w-full bg-primary/30 rounded-t-sm h-[55%] hover:bg-primary/50 transition-colors"></div>
+<div class="w-full bg-primary/20 rounded-t-sm h-[35%] hover:bg-primary/40 transition-colors"></div>
+<div class="w-full bg-primary/60 rounded-t-sm h-[70%] hover:bg-primary/80 transition-colors"></div>
+<div class="w-full bg-primary/40 rounded-t-sm h-[60%] hover:bg-primary/50 transition-colors"></div>
+<div class="w-full bg-primary rounded-t-sm h-[90%] shadow-[0_0_15px_rgba(37,99,235,0.3)]"></div>
+<div class="w-full bg-surface-container-high rounded-t-sm h-[10%]"></div>
+</div>
+</div>
+<div class="flex justify-between mt-sm px-4 font-label-sm text-label-sm text-on-surface-variant">
+<span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+</div>
+<div class="mt-md flex gap-4 relative z-10">
+<button class="flex-1 bg-primary text-on-primary font-label-md text-label-md py-3 rounded-lg shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+                            Withdraw Funds
+                        </button>
+<button class="flex-1 bg-surface-container border border-outline-variant/30 text-on-surface font-label-md text-label-md py-3 rounded-lg hover:bg-surface-container-high transition-colors">
+                            View Details
+                        </button>
+</div>
+</div>
+</div>
+<!-- Performance Metrics Side -->
+<div class="lg:col-span-4 flex flex-col gap-gutter">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2 hidden lg:block">Performance Metrics</h3>
+<!-- Rating Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/20 p-md flex items-center justify-between hover:shadow-md transition-shadow">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-0.5">Customer Rating</p>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-lg text-headline-lg text-on-surface">4.96</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">/ 5.0</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Acceptance Rate Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/20 p-md flex items-center justify-between hover:shadow-md transition-shadow">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-0.5">Acceptance Rate</p>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-lg text-headline-lg text-on-surface">92%</span>
+</div>
+</div>
+</div>
+<!-- Mini sparkline -->
+<div class="w-16 h-8 bg-surface-container/50 rounded flex items-end gap-0.5 p-1">
+<div class="w-full bg-outline-variant/50 h-[60%] rounded-t-sm"></div>
+<div class="w-full bg-outline-variant/50 h-[70%] rounded-t-sm"></div>
+<div class="w-full bg-primary h-[90%] rounded-t-sm"></div>
+</div>
+</div>
+<!-- Cancellation Rate Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/20 p-md flex items-center justify-between hover:shadow-md transition-shadow">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-error-container/50 flex items-center justify-center text-error">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">cancel</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-0.5">Cancellation Rate</p>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-lg text-headline-lg text-on-surface">1.2%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-container-lowest shadow-[0_-4px_12px_rgba(0,0,0,0.05)] md:hidden">
+<div class="w-full flex justify-around items-center px-4 py-2 border-t border-outline-variant/20">
+<a class="flex flex-col items-center justify-center text-on-surface-variant py-1 hover:text-primary transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">home</span>
+<span class="font-label-sm text-label-sm mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant py-1 hover:text-primary transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">work</span>
+<span class="font-label-sm text-label-sm mt-1">Jobs</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 hover:text-primary transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-label-sm text-label-sm mt-1">Earnings</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant py-1 hover:text-primary transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">person</span>
+<span class="font-label-sm text-label-sm mt-1">Profile</span>
+</a>
+</div>
+</nav>
+</body></html>

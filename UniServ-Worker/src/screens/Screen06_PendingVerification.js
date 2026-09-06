@@ -13,7 +13,7 @@ const STEPS = [
 ];
 
 export const Screen06_PendingVerification = ({ navigation }) => {
-  const { worker, updateWorker } = useWorker();
+  const { worker, updateWorker, t } = useWorker();
 
   const simulateVerified = async () => {
     await updateWorker({ verificationStatus: 'verified' });
@@ -25,17 +25,17 @@ export const Screen06_PendingVerification = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.headerSection}>
           <View style={styles.greetingRow}>
-            <Text style={styles.greeting}>Welcome, {worker.name?.split(' ')[0] || 'Worker'}</Text>
+            <Text style={styles.greeting}>{t('goodMorning', 'Welcome')}, {worker?.name?.split(' ')[0] || 'Worker'}</Text>
             <Text style={styles.wave}>👋</Text>
           </View>
           <View style={styles.applicationChip}>
             <Ionicons name="id-card-outline" size={14} color={colors.primary} />
-            <Text style={styles.applicationId}>Application: {worker.workerId}</Text>
+            <Text style={styles.applicationId}>Application: {worker?.workerId || 'UW-2026-001'}</Text>
           </View>
         </View>
 
         <View style={styles.statusCard}>
-          <Text style={styles.statusCardTitle}>Verification Status</Text>
+          <Text style={styles.statusCardTitle}>{t('pendingTitle', 'Verification Status')}</Text>
           {STEPS.map((step, i) => (
             <View key={step.id} style={styles.stepRow}>
               <View style={styles.stepLeft}>
@@ -72,30 +72,30 @@ export const Screen06_PendingVerification = ({ navigation }) => {
           ))}
           <View style={styles.statusMessageBox}>
             <Ionicons name="information-circle-outline" size={16} color={colors.primary} />
-            <Text style={styles.statusMessage}>Your application is being reviewed by the cooperative.</Text>
+            <Text style={styles.statusMessage}>{t('pendingSub', 'Your application is being reviewed by the cooperative.')}</Text>
           </View>
         </View>
 
         <View style={styles.detailsCard}>
-          <Text style={styles.detailsTitle}>Application Details</Text>
-          <DetailRow label="Name" value={worker.name || '—'} />
-          <DetailRow label="Mobile" value={`+91 ${worker.phone}`} />
-          <DetailRow label="Trade" value={worker.tradeType?.charAt(0).toUpperCase() + worker.tradeType?.slice(1) || '—'} />
-          <DetailRow label="Certification" value={worker.isCertified ? 'Certified Worker' : 'Practical Assessment Required'} />
-          {!worker.isCertified && worker.assessmentToken && (
-            <DetailRow label="Assessment Token" value={worker.assessmentToken} highlight />
+          <Text style={styles.detailsTitle}>{t('personalInfo', 'Application Details')}</Text>
+          <DetailRow label={t('fullName', 'Name')} value={worker?.name || '—'} />
+          <DetailRow label={t('mobile', 'Mobile')} value={`+91 ${worker?.phone || '9811223344'}`} />
+          <DetailRow label={t('selectTrade', 'Trade')} value={worker?.tradeType?.charAt(0).toUpperCase() + worker?.tradeType?.slice(1) || '—'} />
+          <DetailRow label={t('tradeCertificate', 'Certification')} value={worker?.isCertified ? 'Certified Worker' : 'Practical Assessment Required'} />
+          {!worker?.isCertified && worker?.assessmentToken && (
+            <DetailRow label={t('yourAssessmentToken', 'Assessment Token')} value={worker.assessmentToken} highlight />
           )}
-          <DetailRow label="Cooperative" value={worker.cooperative} />
+          <DetailRow label={t('cooperative', 'Cooperative')} value={worker?.cooperative || 'Delhi Cooperative'} />
         </View>
 
-        {!worker.isCertified && worker.assessmentToken && (
+        {!worker?.isCertified && worker?.assessmentToken && (
           <View style={styles.tokenReminder}>
             <View style={styles.tokenReminderHeader}>
               <Ionicons name="ticket-outline" size={18} color={colors.primary} />
-              <Text style={styles.tokenReminderTitle}>Assessment Token</Text>
+              <Text style={styles.tokenReminderTitle}>{t('yourAssessmentToken', 'Assessment Token')}</Text>
             </View>
             <Text style={styles.tokenReminderCode}>{worker.assessmentToken}</Text>
-            <Text style={styles.tokenReminderHint}>Keep this token ready for your practical assessment.</Text>
+            <Text style={styles.tokenReminderHint}>{t('tokenInstructions', 'Keep this token ready for your practical assessment.')}</Text>
           </View>
         )}
 
@@ -108,12 +108,12 @@ export const Screen06_PendingVerification = ({ navigation }) => {
 
         <TouchableOpacity style={styles.demoBtn} onPress={simulateVerified} activeOpacity={0.85}>
           <Ionicons name="flash" size={16} color={colors.textInverse} />
-          <Text style={styles.demoBtnText}>Demo: Skip to Verified (Testing Only)</Text>
+          <Text style={styles.demoBtnText}>{t('fastTrackDemo', 'Demo: Skip to Verified (Testing Only)')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.supportRow} activeOpacity={0.7}>
           <Ionicons name="headset-outline" size={16} color={colors.primary} />
-          <Text style={styles.supportText}>Contact Cooperative Support</Text>
+          <Text style={styles.supportText}>{t('helpSupport', 'Contact Cooperative Support')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

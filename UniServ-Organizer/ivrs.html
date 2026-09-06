@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>IVRS System — UniServ Organizer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/custom.css"/>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="js/firebase-data.js"></script>
+<script src="js/app.js"></script>
+</head>
+<body>
+<div style="display:flex;min-height:100vh;">
+  <aside id="sidebar" style="display:flex;flex-direction:column;"></aside>
+  <div class="main-content" style="flex:1;">
+    <div class="top-bar">
+      <div>
+        <h2 style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:700;color:#191c1e;">IVRS System</h2>
+        <p style="font-size:13px;color:#434655;">Interactive Voice Response System for cooperative service dispatch and customer support</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="background:#eff6ff;color:#1d4ed8;font-size:13px;font-weight:700;padding:6px 14px;border-radius:8px;">
+          3 Active Lines
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="alert('IVRS call log exported as CSV.')">
+          <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export
+        </button>
+      </div>
+    </div>
+
+    <div style="padding:32px;">
+
+      <!-- KPI Strip -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">
+        <div class="stat-card" style="border-top:3px solid #004ac6;">
+          <span class="stat-label">Calls Today</span>
+          <span class="stat-value">47</span>
+          <span class="stat-meta">Across all IVR lines</span>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #059669;">
+          <span class="stat-label">Active IVR Lines</span>
+          <span class="stat-value">3</span>
+          <span class="stat-meta">All lines operational</span>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #f59e0b;">
+          <span class="stat-label">Avg Wait Time</span>
+          <span class="stat-value" style="font-size:22px;">1m 42s</span>
+          <span class="stat-meta">Before agent pickup</span>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #7c3aed;">
+          <span class="stat-label">First-Call Resolution</span>
+          <span class="stat-value">78%</span>
+          <span class="stat-meta">Resolved without callback</span>
+        </div>
+      </div>
+
+      <!-- Two-column layout -->
+      <div style="display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start;">
+
+        <!-- Left: Call Logs Table -->
+        <div>
+          <div class="card" style="margin-bottom:20px;padding:14px 16px;">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <div style="flex:1;min-width:200px;position:relative;">
+                <span class="material-symbols-outlined" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;color:#737686;">search</span>
+                <input type="text" id="ivrs-search" placeholder="Search call ID, phone, flow..." class="form-input" style="padding-left:40px;" oninput="filterCalls()"/>
+              </div>
+              <div style="display:flex;gap:8px;" id="ivrs-chips">
+                <button class="filter-chip active" data-f="all" onclick="setIFilter(this,'all')">All</button>
+                <button class="filter-chip" data-f="resolved" onclick="setIFilter(this,'resolved')">Resolved</button>
+                <button class="filter-chip" data-f="escalated" onclick="setIFilter(this,'escalated')">Escalated</button>
+                <button class="filter-chip" data-f="missed" onclick="setIFilter(this,'missed')">Missed</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="padding:0;overflow:hidden;">
+            <div style="overflow-x:auto;">
+              <table class="data-table" id="ivrs-table">
+                <thead>
+                  <tr>
+                    <th>Call ID</th>
+                    <th>Phone</th>
+                    <th>Language</th>
+                    <th>IVR Flow</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="ivrs-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Configuration Panel -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+          <!-- Language Selection Menu -->
+          <div class="card">
+            <h3 style="font-family:'Plus Jakarta Sans';font-size:15px;font-weight:700;color:#191c1e;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+              <span class="material-symbols-outlined" style="font-size:18px;color:#004ac6;font-variation-settings:'FILL' 1;">language</span>
+              Language Selection Menu
+            </h3>
+            <div style="display:flex;flex-direction:column;gap:8px;" id="lang-menu">
+              <!-- rendered by JS -->
+            </div>
+          </div>
+
+          <!-- Main Menu -->
+          <div class="card">
+            <h3 style="font-family:'Plus Jakarta Sans';font-size:15px;font-weight:700;color:#191c1e;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+              <span class="material-symbols-outlined" style="font-size:18px;color:#004ac6;font-variation-settings:'FILL' 1;">dialpad</span>
+              Main Menu Options
+            </h3>
+            <div style="display:flex;flex-direction:column;gap:8px;" id="main-menu">
+              <!-- rendered by JS -->
+            </div>
+          </div>
+
+          <!-- Missed Calls Requiring Callback -->
+          <div class="card">
+            <h3 style="font-family:'Plus Jakarta Sans';font-size:15px;font-weight:700;color:#191c1e;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+              <span class="material-symbols-outlined" style="font-size:18px;color:#dc2626;font-variation-settings:'FILL' 1;">phone_missed</span>
+              Missed Calls — Callback Required
+              <span class="badge badge-red" style="margin-left:auto;">4</span>
+            </h3>
+            <div style="display:flex;flex-direction:column;gap:10px;" id="missed-callbacks">
+              <!-- rendered by JS -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+
+const IVRS_CALLS = [
+  { id:'IVR-2041', phone:'98765-43210', lang:'Hindi',   flow:'Service Booking',  duration:'3m 12s', status:'resolved',  date:'2026-09-06' },
+  { id:'IVR-2040', phone:'87654-32109', lang:'English', flow:'Payment Query',     duration:'1m 48s', status:'resolved',  date:'2026-09-06' },
+  { id:'IVR-2039', phone:'97531-86420', lang:'Bengali', flow:'Complaint',         duration:'4m 05s', status:'escalated', date:'2026-09-06' },
+  { id:'IVR-2038', phone:'76543-21098', lang:'Hindi',   flow:'Worker Status',     duration:'0m 52s', status:'resolved',  date:'2026-09-05' },
+  { id:'IVR-2037', phone:'65432-10987', lang:'Tamil',   flow:'Service Booking',  duration:'2m 30s', status:'resolved',  date:'2026-09-05' },
+  { id:'IVR-2036', phone:'99887-76655', lang:'English', flow:'Complaint',         duration:'—',      status:'missed',    date:'2026-09-05' },
+  { id:'IVR-2035', phone:'91122-33445', lang:'Hindi',   flow:'Payment Query',     duration:'1m 15s', status:'resolved',  date:'2026-09-04' },
+  { id:'IVR-2034', phone:'84561-23780', lang:'Bengali', flow:'Worker Status',     duration:'—',      status:'missed',    date:'2026-09-04' },
+];
+
+const LANG_MENU = [
+  { key:1, label:'Hindi'   },
+  { key:2, label:'English' },
+  { key:3, label:'Bengali' },
+  { key:4, label:'Tamil'   },
+];
+
+const MAIN_MENU = [
+  { key:1, label:'New Booking'     },
+  { key:2, label:'Track Worker'    },
+  { key:3, label:'File Complaint'  },
+  { key:4, label:'Payment Status'  },
+  { key:5, label:'Speak to Agent'  },
+];
+
+const MISSED_CALLBACKS = [
+  { phone:'99887-76655', time:'2026-09-05 14:32', flow:'Complaint'    },
+  { phone:'84561-23780', time:'2026-09-04 11:08', flow:'Worker Status' },
+  { phone:'73312-98001', time:'2026-09-04 09:45', flow:'Service Booking' },
+  { phone:'66789-45123', time:'2026-09-03 17:21', flow:'Payment Query' },
+];
+
+const CALL_STATUS_BADGE = {
+  resolved:  '<span class="badge badge-green">Resolved</span>',
+  escalated: '<span class="badge badge-amber">Escalated</span>',
+  missed:    '<span class="badge badge-red">Missed</span>',
+};
+
+let ivrFilter = 'all';
+
+function filterCalls() {
+  const q = document.getElementById('ivrs-search').value.toLowerCase();
+  const filtered = IVRS_CALLS.filter(c => {
+    const matchQ = !q || c.id.toLowerCase().includes(q) || c.phone.includes(q) || c.flow.toLowerCase().includes(q) || c.lang.toLowerCase().includes(q);
+    const matchF = ivrFilter === 'all' || c.status === ivrFilter;
+    return matchQ && matchF;
+  });
+  document.getElementById('ivrs-tbody').innerHTML = filtered.map(c => `
+    <tr>
+      <td><code style="background:#eff6ff;color:#1d4ed8;padding:3px 7px;border-radius:4px;font-size:12px;font-weight:700;">${c.id}</code></td>
+      <td style="font-family:monospace;font-size:13px;">${c.phone}</td>
+      <td><span style="font-size:12px;font-weight:600;color:#434655;">${c.lang}</span></td>
+      <td><span style="font-size:13px;">${c.flow}</span></td>
+      <td style="font-size:12px;color:#737686;">${c.duration}</td>
+      <td>${CALL_STATUS_BADGE[c.status] || c.status}</td>
+      <td style="font-size:12px;color:#737686;">${c.date}</td>
+    </tr>`).join('');
+}
+
+function setIFilter(el, f) {
+  document.querySelectorAll('#ivrs-chips .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  ivrFilter = f;
+  filterCalls();
+}
+
+function renderMenuItems(containerId, items, type) {
+  document.getElementById(containerId).innerHTML = items.map(item => `
+    <div style="display:flex;align-items:center;gap:12px;padding:8px 10px;background:#f8f9ff;border-radius:8px;border:1px solid #e8eaf0;">
+      <div style="width:28px;height:28px;background:#004ac6;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <span style="color:white;font-size:13px;font-weight:700;">${item.key}</span>
+      </div>
+      <span style="flex:1;font-size:13px;font-weight:600;color:#191c1e;">Press ${item.key} for ${item.label}</span>
+      <button class="btn btn-outline btn-sm" onclick="alert('Editing IVR menu item: Press ${item.key} for ${item.label}')">Edit</button>
+    </div>`).join('');
+}
+
+function renderMissedCallbacks() {
+  document.getElementById('missed-callbacks').innerHTML = MISSED_CALLBACKS.map(m => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff5f5;border:1px solid #fecaca;border-radius:8px;">
+      <span class="material-symbols-outlined" style="font-size:20px;color:#dc2626;font-variation-settings:'FILL' 1;">phone_missed</span>
+      <div style="flex:1;min-width:0;">
+        <p style="font-size:13px;font-weight:700;color:#191c1e;font-family:monospace;">${m.phone}</p>
+        <p style="font-size:11px;color:#737686;">${m.flow} · ${m.time}</p>
+      </div>
+      <button class="btn btn-outline btn-sm" style="border-color:#dc2626;color:#dc2626;" onclick="alert('Initiating callback to ${m.phone}')">
+        <span class="material-symbols-outlined" style="font-size:14px;">phone_callback</span> Call Back
+      </button>
+    </div>`).join('');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderSidebar('ivrs');
+  filterCalls();
+  renderMenuItems('lang-menu',  LANG_MENU,  'lang');
+  renderMenuItems('main-menu',  MAIN_MENU,  'main');
+  renderMissedCallbacks();
+});
+</script>
+</body>
+</html>

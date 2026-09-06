@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { useJob } from '../context/JobContext';
+import { useWorker } from '../context/WorkerContext';
 
 const DECLINE_REASONS = [
   'Too far away / Traffic congestion',
@@ -16,7 +17,8 @@ const DECLINE_REASONS = [
 ];
 
 export const Screen08_JobRequest = ({ navigation }) => {
-  const { pendingRequest, countdown, acceptJob, declineJob, activeJob, jobHistory } = useJob();
+  const { t } = useWorker();
+  const { pendingRequest, countdown, acceptJob, declineJob, activeJob, jobHistory, isSimMode } = useJob();
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [selectedReason, setSelectedReason] = useState('');
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -72,17 +74,17 @@ export const Screen08_JobRequest = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.safe}>
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <Text style={styles.pageTitle}>Job Requests</Text>
+          <Text style={styles.pageTitle}>{t('tabJobs', 'Job Requests')}</Text>
           <View style={styles.emptyState}>
             <View style={styles.emptyIcon}>
               <Ionicons name="briefcase-outline" size={48} color={colors.textMuted} />
             </View>
-            <Text style={styles.emptyTitle}>No Pending Requests</Text>
-            <Text style={styles.emptySubtitle}>Go online from the Home dashboard to receive instant hyper-local cooperative dispatch requests.</Text>
+            <Text style={styles.emptyTitle}>{t('listeningJobs', 'No Pending Requests')}</Text>
+            <Text style={styles.emptySubtitle}>{t('offlineBanner', 'Go online from the Home dashboard to receive instant hyper-local cooperative dispatch requests.')}</Text>
           </View>
           {jobHistory.length > 0 && (
             <View style={{ marginTop: 24 }}>
-              <Text style={styles.sectionTitle}>Recent Jobs</Text>
+              <Text style={styles.sectionTitle}>{t('recentTransactions', 'Recent Jobs')}</Text>
               {jobHistory.slice(0, 4).map((job) => (
                 <View key={job.id} style={styles.historyCard}>
                   <View style={{ flex: 1 }}>
@@ -110,12 +112,12 @@ export const Screen08_JobRequest = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.safe}>
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <Text style={styles.pageTitle}>Active Job</Text>
+          <Text style={styles.pageTitle}>{t('workInProgress', 'Active Job')}</Text>
           <View style={styles.activeJobCard}>
             <View style={styles.activeJobHeader}>
               <View style={styles.activeBadge}>
                 <View style={styles.activeDot} />
-                <Text style={styles.activeBadgeText}>Job In Progress</Text>
+                <Text style={styles.activeBadgeText}>{t('workInProgress', 'Job In Progress')}</Text>
               </View>
               <Text style={styles.activeJobId}>{activeJob.id}</Text>
             </View>
@@ -128,7 +130,7 @@ export const Screen08_JobRequest = ({ navigation }) => {
               onPress={() => navigation.navigate('ActiveJob')}
               activeOpacity={0.85}
             >
-              <Text style={styles.viewActiveBtnText}>Continue to Job Monitor</Text>
+              <Text style={styles.viewActiveBtnText}>{t('continue', 'Continue to Job Monitor')}</Text>
               <Ionicons name="arrow-forward" size={16} color={colors.textInverse} />
             </TouchableOpacity>
           </View>
@@ -140,11 +142,11 @@ export const Screen08_JobRequest = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.pageTitle}>New Job Request</Text>
+        <Text style={styles.pageTitle}>{t('incomingJobTitle', 'New Job Request')}</Text>
 
         <View style={styles.timerCard}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={styles.timerLabel}>Time to Respond</Text>
+            <Text style={styles.timerLabel}>{t('timeLeftSec', 'Time to Respond')}</Text>
             <Text style={[styles.timerValue, { color: countdownColor }]}>{countdown}s</Text>
           </View>
           <View style={styles.timerBar}>
@@ -303,15 +305,26 @@ export const Screen08_JobRequest = ({ navigation }) => {
           {/* Earnings Breakdown */}
           <View style={styles.earningBox}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.earningLabel}>Estimated Artisan Earning (80%)</Text>
+              <Text style={styles.earningLabel}>{t('estimatedPayout', 'Estimated Artisan Earning (80%)')}</Text>
               <Text style={styles.earningAmount}>₹{pendingRequest.estimatedEarning}</Text>
-              <Text style={styles.earningSub}>Customer Total: ₹{pendingRequest.totalAmount || 400} (10% Welfare Fund incl.)</Text>
+              <Text style={styles.earningSub}>{t('totalCustomerBill', 'Customer Total')}: ₹{pendingRequest.totalAmount || 400} ({t('welfareDeduction', '10% Welfare Fund incl.')})</Text>
             </View>
             <View style={styles.earningTag}>
               <Ionicons name="shield-checkmark" size={14} color={colors.success} />
-              <Text style={styles.earningTagText}>Guaranteed</Text>
+              <Text style={styles.earningTagText}>{t('verified', 'Guaranteed')}</Text>
             </View>
           </View>
+
+          {/* Sim mode OTP hint */}
+          {isSimMode && (
+            <View style={styles.simHint}>
+              <Ionicons name="flask-outline" size={14} color="#7C3AED" />
+              <Text style={styles.simHintText}>
+                Demo — Start OTP: <Text style={styles.simOtp}>{pendingRequest.start_otp}</Text>{'  '}
+                Complete OTP: <Text style={styles.simOtp}>{pendingRequest.completion_otp}</Text>
+              </Text>
+            </View>
+          )}
 
           {/* Accept / Decline Action Buttons */}
           <View style={styles.actionsRow}>
@@ -321,7 +334,7 @@ export const Screen08_JobRequest = ({ navigation }) => {
               activeOpacity={0.8}
             >
               <Ionicons name="close-circle-outline" size={18} color={colors.danger} />
-              <Text style={styles.declineBtnText}>Decline</Text>
+              <Text style={styles.declineBtnText}>{t('rejectJobBtn', 'Decline')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.acceptBtn}
@@ -329,7 +342,7 @@ export const Screen08_JobRequest = ({ navigation }) => {
               activeOpacity={0.85}
             >
               <Ionicons name="checkmark-circle" size={18} color={colors.textInverse} />
-              <Text style={styles.acceptBtnText}>Accept & Dispatch</Text>
+              <Text style={styles.acceptBtnText}>{t('acceptJobBtn', 'Accept & Dispatch')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -338,7 +351,7 @@ export const Screen08_JobRequest = ({ navigation }) => {
         <Modal visible={showDeclineModal} transparent animationType="slide">
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Reason for Declining</Text>
+              <Text style={styles.modalTitle}>{t('rejectJobBtn', 'Reason for Declining')}</Text>
               <Text style={styles.modalSub}>Helps the cooperative re-route to another nearest verified artisan.</Text>
               {DECLINE_REASONS.map((reason) => (
                 <TouchableOpacity
@@ -361,14 +374,14 @@ export const Screen08_JobRequest = ({ navigation }) => {
                   style={styles.modalCancelBtn}
                   onPress={() => setShowDeclineModal(false)}
                 >
-                  <Text style={styles.modalCancelText}>Cancel</Text>
+                  <Text style={styles.modalCancelText}>{t('cancel', 'Cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalConfirmBtn, !selectedReason && { opacity: 0.5 }]}
                   disabled={!selectedReason}
                   onPress={handleDecline}
                 >
-                  <Text style={styles.modalConfirmText}>Confirm Decline</Text>
+                  <Text style={styles.modalConfirmText}>{t('confirm', 'Confirm Decline')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -392,6 +405,12 @@ export const Screen08_JobRequest = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  simHint: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#EDE9FE',
+    borderRadius: 10, padding: 10, marginBottom: 12, gap: 6,
+  },
+  simHintText: { fontSize: 12, color: '#5B21B6', flex: 1 },
+  simOtp: { fontWeight: '800', letterSpacing: 1 },
   safe: { flex: 1, backgroundColor: colors.background },
   scroll: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 36 },
   pageTitle: { fontSize: 22, fontWeight: '800', color: colors.textPrimary, marginBottom: 14 },

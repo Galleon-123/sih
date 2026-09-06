@@ -15,8 +15,16 @@ const COVERAGE_ITEMS = [
 ];
 
 export const Screen13_Insurance = ({ navigation }) => {
-  const { worker } = useWorker();
+  const { worker, t } = useWorker();
   const isActive = worker.insurance?.status === 'active';
+
+  const coverageList = [
+    { id: 'death', label: t('accidentalDeath', 'Accidental Death'), amount: '₹5,00,000', icon: 'shield-outline' },
+    { id: 'disability', label: t('permanentDisability', 'Permanent Disability'), amount: '₹3,00,000', icon: 'body-outline' },
+    { id: 'medical', label: t('medicalHospitalization', 'Medical Hospitalization'), amount: '₹1,00,000', icon: 'medkit-outline' },
+    { id: 'equipment', label: t('equipmentDamage', 'Equipment Damage'), amount: '₹25,000', icon: 'construct-outline' },
+    { id: 'income', label: t('incomeLoss', 'Income Loss (accident)'), amount: '₹5,000/month', icon: 'wallet-outline' },
+  ];
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -25,7 +33,7 @@ export const Screen13_Insurance = ({ navigation }) => {
           <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.pageTitle}>Insurance</Text>
+          <Text style={styles.pageTitle}>{t('insurance', 'Insurance')}</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -40,35 +48,35 @@ export const Screen13_Insurance = ({ navigation }) => {
             </View>
             <View>
               <Text style={styles.statusTitle}>
-                Insurance {isActive ? 'Active' : 'Expired'}
+                {t('insurance', 'Insurance')} {isActive ? t('active', 'Active') : t('expired', 'Expired')}
               </Text>
               <Text style={styles.statusSub}>
-                {isActive ? 'You are fully covered' : 'Please renew your coverage'}
+                {isActive ? t('fullyCovered', 'You are fully covered') : t('renewCoverage', 'Please renew your coverage')}
               </Text>
             </View>
           </View>
           <View style={styles.policyDetails}>
             <View style={styles.policyRow}>
-              <Text style={styles.policyLabel}>Policy Number</Text>
+              <Text style={styles.policyLabel}>{t('policyNumber', 'Policy Number')}</Text>
               <Text style={styles.policyValue}>{worker.insurance?.policyNo}</Text>
             </View>
             <View style={styles.policyRow}>
-              <Text style={styles.policyLabel}>Valid Until</Text>
+              <Text style={styles.policyLabel}>{t('validUntil', 'Valid Until')}</Text>
               <Text style={styles.policyValue}>{worker.insurance?.validUntil}</Text>
             </View>
             <View style={styles.policyRow}>
-              <Text style={styles.policyLabel}>Coverage Type</Text>
-              <Text style={styles.policyValue}>Comprehensive Worker</Text>
+              <Text style={styles.policyLabel}>{t('coverageType', 'Coverage Type')}</Text>
+              <Text style={styles.policyValue}>{t('comprehensiveWorker', 'Comprehensive Worker')}</Text>
             </View>
             <View style={styles.policyRow}>
-              <Text style={styles.policyLabel}>Premium Source</Text>
-              <Text style={styles.policyValue}>Welfare Fund</Text>
+              <Text style={styles.policyLabel}>{t('premiumSource', 'Premium Source')}</Text>
+              <Text style={styles.policyValue}>{t('welfareFund', 'Welfare Fund')}</Text>
             </View>
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>Coverage Details</Text>
-        {COVERAGE_ITEMS.map((item) => (
+        <Text style={styles.sectionTitle}>{t('coverageDetails', 'Coverage Details')}</Text>
+        {coverageList.map((item) => (
           <View key={item.id} style={styles.coverageCard}>
             <View style={styles.coverageIcon}>
               <Ionicons name={item.icon} size={20} color={colors.primary} />
@@ -79,7 +87,7 @@ export const Screen13_Insurance = ({ navigation }) => {
             </View>
             <View style={styles.coveredBadge}>
               <Ionicons name="checkmark" size={12} color={colors.success} />
-              <Text style={styles.coveredText}>Covered</Text>
+              <Text style={styles.coveredText}>{t('covered', 'Covered')}</Text>
             </View>
           </View>
         ))}
@@ -87,22 +95,22 @@ export const Screen13_Insurance = ({ navigation }) => {
         <View style={styles.welfareNote}>
           <Ionicons name="information-circle-outline" size={16} color={colors.primary} />
           <Text style={styles.welfareNoteText}>
-            Your insurance premium is paid automatically from your Welfare Fund contributions. No additional payment required.
+            {t('insuranceNote', 'Your insurance premium is paid automatically from your Welfare Fund contributions. No additional payment required.')}
           </Text>
         </View>
 
-        <Text style={styles.sectionTitle}>Actions</Text>
+        <Text style={styles.sectionTitle}>{t('actions', 'Actions')}</Text>
         <TouchableOpacity style={styles.claimBtn} activeOpacity={0.85}>
           <Ionicons name="document-text-outline" size={20} color={colors.textInverse} />
-          <Text style={styles.claimBtnText}>File a Claim</Text>
+          <Text style={styles.claimBtnText}>{t('fileClaim', 'File a Claim')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.contactBtn} activeOpacity={0.8}>
           <Ionicons name="headset-outline" size={20} color={colors.primary} />
-          <Text style={styles.contactBtnText}>Contact Insurance Coordinator</Text>
+          <Text style={styles.contactBtnText}>{t('contactCoordinator', 'Contact Insurance Coordinator')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.downloadBtn} activeOpacity={0.7}>
           <Ionicons name="download-outline" size={18} color={colors.textSecondary} />
-          <Text style={styles.downloadBtnText}>Download Policy Document</Text>
+          <Text style={styles.downloadBtnText}>{t('downloadPolicy', 'Download Policy Document')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

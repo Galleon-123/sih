@@ -35,14 +35,14 @@ const BarChart = ({ data, maxAmount }) => {
 };
 
 export const Screen11_EarningsWallet = ({ navigation }) => {
-  const { worker, updateWorker } = useWorker();
+  const { worker, updateWorker, t } = useWorker();
   const { jobHistory } = useJob();
   const [period, setPeriod] = useState('weekly');
   const [showPayoutModal, setShowPayoutModal] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState('2000');
   const [payoutSuccess, setPayoutSuccess] = useState(false);
 
-  const availableBalance = (worker.earnings?.thisMonth || 8200) - 1400;
+  const availableBalance = (worker?.earnings?.thisMonth || 8200) - 1400;
   const maxAmount = Math.max(...MOCK_WEEKLY_EARNINGS.map((d) => d.amount));
 
   const handleRequestPayout = () => {
@@ -62,13 +62,13 @@ export const Screen11_EarningsWallet = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.pageTitle}>Earnings & Cooperative Wallet</Text>
+        <Text style={styles.pageTitle}>{t('walletTitle', 'Earnings & Cooperative Wallet')}</Text>
 
         {/* Balance Card */}
         <View style={styles.balanceCard}>
           <View style={styles.balanceHeader}>
             <View>
-              <Text style={styles.balanceLabel}>Available for Instant Payout</Text>
+              <Text style={styles.balanceLabel}>{t('availableBalance', 'Available for Instant Payout')}</Text>
               <Text style={styles.balanceAmount}>₹{availableBalance.toLocaleString()}</Text>
             </View>
             <View style={styles.walletIcon}>
@@ -81,27 +81,27 @@ export const Screen11_EarningsWallet = ({ navigation }) => {
             activeOpacity={0.85}
           >
             <Ionicons name="arrow-up-circle" size={18} color={colors.textInverse} />
-            <Text style={styles.payoutBtnText}>Request Instant Bank / UPI Payout</Text>
+            <Text style={styles.payoutBtnText}>{t('withdrawFunds', 'Request Instant Bank / UPI Payout')}</Text>
           </TouchableOpacity>
           <View style={styles.upiRow}>
             <Ionicons name="shield-checkmark" size={14} color="rgba(255,255,255,0.8)" />
-            <Text style={styles.upiText}>Cooperative MSCS Direct Settlement · No Commission Extraction</Text>
+            <Text style={styles.upiText}>{t('cooperativeShareNotice', 'Cooperative MSCS Direct Settlement · No Commission Extraction')}</Text>
           </View>
         </View>
 
         {/* Stats Row */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Text style={styles.statLabel}>TODAY</Text>
-            <Text style={styles.statValue}>₹{worker.earnings?.today || 450}</Text>
+            <Text style={styles.statLabel}>{t('jobsToday', 'TODAY')}</Text>
+            <Text style={styles.statValue}>₹{worker?.earnings?.today || 450}</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statLabel}>THIS MONTH</Text>
-            <Text style={styles.statValue}>₹{worker.earnings?.thisMonth?.toLocaleString() || '8,200'}</Text>
+            <Text style={styles.statLabel}>{t('thisMonth', 'THIS MONTH')}</Text>
+            <Text style={styles.statValue}>₹{worker?.earnings?.thisMonth?.toLocaleString() || '8,200'}</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statLabel}>ALL TIME</Text>
-            <Text style={styles.statValue}>₹{(worker.earnings?.total / 1000).toFixed(0)}K</Text>
+            <Text style={styles.statLabel}>{t('totalEarned', 'LIFETIME')}</Text>
+            <Text style={styles.statValue}>₹{worker?.earnings?.total ? (worker.earnings.total / 1000).toFixed(0) + 'K' : '94.5K'}</Text>
           </View>
         </View>
 

@@ -8,19 +8,12 @@ import { colors } from '../theme/colors';
 import { useWorker } from '../context/WorkerContext';
 import { useJob } from '../context/JobContext';
 
-const getGreeting = () => {
+const getGreeting = (t) => {
   const h = new Date().getHours();
-  if (h < 12) return 'Good Morning';
-  if (h < 17) return 'Good Afternoon';
-  return 'Good Evening';
+  if (h < 12) return t('goodMorning', 'Good Morning');
+  if (h < 17) return t('goodAfternoon', 'Good Afternoon');
+  return t('goodEvening', 'Good Evening');
 };
-
-const QUICK_ACTIONS = [
-  { id: 'jobs', label: 'Accept Jobs', icon: 'briefcase', color: colors.primary, bg: colors.primarySubtle, screen: 'Jobs' },
-  { id: 'schedule', label: 'My Schedule', icon: 'calendar', color: colors.success, bg: colors.successLight, screen: 'Schedule' },
-  { id: 'earnings', label: 'Earnings', icon: 'wallet', color: '#7C3AED', bg: '#EDE9FE', screen: 'Earnings' },
-  { id: 'welfare', label: 'Welfare Fund', icon: 'heart', color: colors.warning, bg: colors.warningLight, screen: null },
-];
 
 export const Screen07_HomeDashboard = ({ navigation }) => {
   const { worker, toggleOnline, t } = useWorker();
@@ -28,9 +21,9 @@ export const Screen07_HomeDashboard = ({ navigation }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const dynamicQuickActions = [
-    { id: 'jobs', label: t('acceptJob', 'Accept Jobs'), icon: 'briefcase', color: colors.primary, bg: colors.primarySubtle, screen: 'Jobs' },
+    { id: 'jobs', label: t('acceptJobs', 'Accept Jobs'), icon: 'briefcase', color: colors.primary, bg: colors.primarySubtle, screen: 'Jobs' },
     { id: 'schedule', label: t('mySchedule', 'My Schedule'), icon: 'calendar', color: colors.success, bg: colors.successLight, screen: 'Schedule' },
-    { id: 'earnings', label: t('earnings', 'Earnings'), icon: 'wallet', color: '#7C3AED', bg: '#EDE9FE', screen: 'Earnings' },
+    { id: 'earnings', label: t('earningsWallet', 'Earnings Wallet'), icon: 'wallet', color: '#7C3AED', bg: '#EDE9FE', screen: 'Earnings' },
     { id: 'welfare', label: t('welfareFund', 'Welfare Fund'), icon: 'heart', color: colors.warning, bg: colors.warningLight, screen: null },
   ];
 
@@ -60,21 +53,21 @@ export const Screen07_HomeDashboard = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.topBar}>
           <View>
-            <Text style={styles.greeting}>{getGreeting()},</Text>
-            <Text style={styles.workerName}>{worker.name?.split(' ')[0] || 'Worker'} 👋</Text>
+            <Text style={styles.greeting}>{getGreeting(t)},</Text>
+            <Text style={styles.workerName}>{worker?.name?.split(' ')[0] || 'Worker'} 👋</Text>
           </View>
           <View style={styles.topBarRight}>
             <TouchableOpacity style={styles.notifBtn} activeOpacity={0.7}>
               <Ionicons name="notifications-outline" size={22} color={colors.textPrimary} />
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.onlineToggle, worker.isOnline && styles.onlineToggleActive]}
+              style={[styles.onlineToggle, worker?.isOnline && styles.onlineToggleActive]}
               onPress={toggleOnline}
               activeOpacity={0.8}
             >
-              <View style={[styles.onlineDot, worker.isOnline && styles.onlineDotActive]} />
-              <Text style={[styles.onlineText, worker.isOnline && styles.onlineTextActive]}>
-                {worker.isOnline ? 'Online' : 'Offline'}
+              <View style={[styles.onlineDot, worker?.isOnline && styles.onlineDotActive]} />
+              <Text style={[styles.onlineText, worker?.isOnline && styles.onlineTextActive]}>
+                {worker?.isOnline ? t('online', 'Online') : t('offline', 'Offline')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -88,12 +81,12 @@ export const Screen07_HomeDashboard = ({ navigation }) => {
           </View>
           <View style={styles.statCard}>
             <Ionicons name="wallet" size={18} color={colors.success} />
-            <Text style={[styles.statValue, { color: colors.success }]}>₹{worker.earnings?.today || 450}</Text>
+            <Text style={[styles.statValue, { color: colors.success }]}>₹{worker?.earnings?.today || 450}</Text>
             <Text style={styles.statLabel}>{t('todayEarnings', "Today's Earnings")}</Text>
           </View>
           <View style={styles.statCard}>
             <Ionicons name="star" size={18} color={colors.warning} />
-            <Text style={[styles.statValue, { color: colors.warning }]}>{worker.rating}</Text>
+            <Text style={[styles.statValue, { color: colors.warning }]}>{worker?.rating || 4.7}</Text>
             <Text style={styles.statLabel}>{t('rating', 'Rating')}</Text>
           </View>
         </View>
@@ -103,7 +96,7 @@ export const Screen07_HomeDashboard = ({ navigation }) => {
             <View style={styles.jobBannerLeft}>
               <View style={styles.pulseDot} />
               <View>
-                <Text style={styles.jobBannerTitle}>New Job Request!</Text>
+                <Text style={styles.jobBannerTitle}>{t('newJobRequestAlert', 'New Job Request!')}</Text>
                 <Text style={styles.jobBannerSub}>{pendingRequest.service} · {pendingRequest.customerArea}</Text>
               </View>
             </View>
@@ -112,29 +105,29 @@ export const Screen07_HomeDashboard = ({ navigation }) => {
               onPress={() => navigation.navigate('Jobs')}
               activeOpacity={0.85}
             >
-              <Text style={styles.viewJobBtnText}>View</Text>
+              <Text style={styles.viewJobBtnText}>{t('confirm', 'View')}</Text>
             </TouchableOpacity>
           </Animated.View>
-        ) : worker.isOnline ? (
+        ) : worker?.isOnline ? (
           <View style={styles.waitingBanner}>
             <Ionicons name="radio-outline" size={20} color={colors.primary} />
-            <Text style={styles.waitingText}>Listening for new job requests...</Text>
+            <Text style={styles.waitingText}>{t('listeningJobs', 'Listening for new job requests...')}</Text>
           </View>
         ) : (
           <View style={styles.offlineBanner}>
             <Ionicons name="moon-outline" size={20} color={colors.textMuted} />
-            <Text style={styles.offlineText}>You are offline. Go online to receive jobs.</Text>
+            <Text style={styles.offlineText}>{t('offlineBanner', 'You are offline. Go online to receive jobs.')}</Text>
           </View>
         )}
 
-        {!pendingRequest && worker.isOnline && (
+        {!pendingRequest && worker?.isOnline && (
           <TouchableOpacity style={styles.simulateBtn} onPress={simulateJobRequest} activeOpacity={0.8}>
             <Ionicons name="flash" size={14} color={colors.textInverse} />
-            <Text style={styles.simulateBtnText}>Simulate Job Request (Demo)</Text>
+            <Text style={styles.simulateBtnText}>{t('simulateJob', 'Simulate Job Request (Demo)')}</Text>
           </TouchableOpacity>
         )}
 
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <Text style={styles.sectionTitle}>{t('quickActions', 'Quick Actions')}</Text>
         <View style={styles.actionsGrid}>
           {dynamicQuickActions.map((a) => (
             <TouchableOpacity
@@ -154,17 +147,17 @@ export const Screen07_HomeDashboard = ({ navigation }) => {
         <View style={styles.demandCard}>
           <View style={styles.demandHeader}>
             <Ionicons name="flame" size={18} color={colors.danger} />
-            <Text style={styles.demandTitle}>Demand Alert</Text>
+            <Text style={styles.demandTitle}>{t('demandAlert', 'Demand Alert')}</Text>
             <TouchableOpacity
               style={styles.heatmapBtn}
               onPress={() => navigation.navigate('DemandHeatmap')}
               activeOpacity={0.7}
             >
-              <Text style={styles.heatmapBtnText}>View Heatmap</Text>
+              <Text style={styles.heatmapBtnText}>{t('viewHeatmap', 'View Heatmap')}</Text>
             </TouchableOpacity>
           </View>
           <Text style={styles.demandText}>
-            High demand for <Text style={{ fontWeight: '700', color: colors.danger }}>Electricians</Text> in Lajpat Nagar, Greater Kailash right now.
+            {t('highDemandAlert', 'High demand for artisans in your area right now.')}
           </Text>
           <View style={styles.demandChips}>
             <View style={styles.demandChip}><Text style={styles.demandChipText}>🔥 Lajpat Nagar</Text></View>
@@ -176,21 +169,21 @@ export const Screen07_HomeDashboard = ({ navigation }) => {
         </View>
 
         <TouchableOpacity
-          style={[styles.insuranceChip, worker.insurance?.status === 'active' && styles.insuranceChipActive]}
+          style={[styles.insuranceChip, worker?.insurance?.status === 'active' && styles.insuranceChipActive]}
           onPress={() => navigation.navigate('Insurance')}
           activeOpacity={0.8}
         >
           <Ionicons
-            name={worker.insurance?.status === 'active' ? 'shield-checkmark' : 'shield-outline'}
+            name={worker?.insurance?.status === 'active' ? 'shield-checkmark' : 'shield-outline'}
             size={18}
-            color={worker.insurance?.status === 'active' ? colors.success : colors.textMuted}
+            color={worker?.insurance?.status === 'active' ? colors.success : colors.textMuted}
           />
           <View style={{ flex: 1, marginLeft: 10 }}>
             <Text style={styles.insuranceTitle}>
-              Insurance: {worker.insurance?.status === 'active' ? 'Active' : 'Expired'}
+              {worker?.insurance?.status === 'active' ? t('insuranceActive', 'Insurance: Active') : t('insuranceExpired', 'Insurance: Expired')}
             </Text>
             <Text style={styles.insuranceSub}>
-              Policy {worker.insurance?.policyNo} · Valid until {worker.insurance?.validUntil}
+              Policy {worker?.insurance?.policyNo || 'UWCI-2026-08871'} · {t('validUntil', 'Valid until')} {worker?.insurance?.validUntil || '2027-03-31'}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />

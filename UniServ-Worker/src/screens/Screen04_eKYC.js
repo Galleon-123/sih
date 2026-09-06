@@ -9,7 +9,7 @@ import { colors } from '../theme/colors';
 import { useWorker } from '../context/WorkerContext';
 
 export const Screen04_eKYC = ({ navigation }) => {
-  const { updateWorker } = useWorker();
+  const { updateWorker, t } = useWorker();
   const [aadhaar, setAadhaar] = useState('');
   const [aadhaarFront, setAadhaarFront] = useState(null);
   const [aadhaarBack, setAadhaarBack] = useState(null);
@@ -72,7 +72,7 @@ export const Screen04_eKYC = ({ navigation }) => {
           <Image source={{ uri: image }} style={styles.uploadPreview} />
           <View style={styles.uploadDoneBadge}>
             <Ionicons name="checkmark-circle" size={20} color={colors.success} />
-            <Text style={styles.uploadDoneText}>Uploaded</Text>
+            <Text style={styles.uploadDoneText}>{t('uploaded', 'Uploaded')}</Text>
           </View>
         </View>
       ) : (
@@ -82,7 +82,7 @@ export const Screen04_eKYC = ({ navigation }) => {
           </View>
           <Text style={styles.uploadLabel}>{label}</Text>
           {required && <Text style={styles.uploadRequired}>Required</Text>}
-          <Text style={styles.uploadHint}>Tap to upload</Text>
+          <Text style={styles.uploadHint}>{t('tapToUpload', 'Tap to upload')}</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -99,12 +99,12 @@ export const Screen04_eKYC = ({ navigation }) => {
           <View style={styles.iconCircle}>
             <Ionicons name="id-card" size={28} color={colors.primary} />
           </View>
-          <Text style={styles.title}>eKYC Verification</Text>
-          <Text style={styles.subtitle}>Upload your Aadhaar card and a selfie for identity verification.</Text>
+          <Text style={styles.title}>{t('ekycTitle', 'eKYC Verification')}</Text>
+          <Text style={styles.subtitle}>{t('ekycSub', 'Upload your Aadhaar card and a selfie for identity verification.')}</Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Aadhaar Number</Text>
+          <Text style={styles.sectionTitle}>{t('aadhaarNumber', 'Aadhaar Number')}</Text>
           <TextInput
             style={styles.input}
             placeholder="XXXX XXXX XXXX"
@@ -120,14 +120,14 @@ export const Screen04_eKYC = ({ navigation }) => {
         <Text style={styles.sectionTitle}>Document Upload</Text>
         <View style={styles.uploadRow}>
           <UploadBox
-            label="Aadhaar Front"
+            label={t('aadhaarFront', 'Aadhaar Front')}
             icon="card-outline"
             image={aadhaarFront}
             onPress={() => pickImage(setAadhaarFront, 'Aadhaar Front')}
             required
           />
           <UploadBox
-            label="Aadhaar Back"
+            label={t('aadhaarBack', 'Aadhaar Back')}
             icon="card"
             image={aadhaarBack}
             onPress={() => pickImage(setAadhaarBack, 'Aadhaar Back')}
@@ -135,21 +135,21 @@ export const Screen04_eKYC = ({ navigation }) => {
           />
         </View>
 
-        <Text style={styles.sectionTitle}>Live Selfie</Text>
+        <Text style={styles.sectionTitle}>{t('takeSelfie', 'Live Selfie')}</Text>
         <TouchableOpacity style={[styles.selfieBox, selfie && styles.selfieBoxDone]} onPress={takeSelfie} activeOpacity={0.8}>
           {selfie ? (
             <View style={styles.selfieDone}>
               <Image source={{ uri: selfie }} style={styles.selfiePreview} />
               <View style={styles.selfieBadge}>
                 <Ionicons name="checkmark-circle" size={20} color={colors.success} />
-                <Text style={styles.selfieText}>Selfie Captured</Text>
+                <Text style={styles.selfieText}>{t('uploaded', 'Selfie Captured')}</Text>
               </View>
               <Text style={styles.selfieRetake}>Tap to retake</Text>
             </View>
           ) : (
             <View style={styles.selfieEmpty}>
               <Ionicons name="camera" size={36} color={colors.primary} />
-              <Text style={styles.selfieLabel}>Take Selfie</Text>
+              <Text style={styles.selfieLabel}>{t('takeSelfie', 'Take Selfie')}</Text>
               <Text style={styles.selfieHint}>Use front camera in good lighting</Text>
             </View>
           )}
@@ -168,12 +168,12 @@ export const Screen04_eKYC = ({ navigation }) => {
           activeOpacity={0.85}
           disabled={!aadhaarFront || !selfie}
         >
-          <Text style={styles.btnText}>Submit KYC</Text>
+          <Text style={styles.btnText}>{t('verifySubmitKyc', 'Submit KYC')}</Text>
           <Ionicons name="arrow-forward" size={16} color={colors.textInverse} style={{ marginLeft: 8 }} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.skipBtn} onPress={handleSubmit} activeOpacity={0.7}>
-          <Text style={styles.skipText}>Skip for now (Demo Mode)</Text>
+          <Text style={styles.skipText}>{t('quickDemoLogin', 'Skip for now (Demo Mode)')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

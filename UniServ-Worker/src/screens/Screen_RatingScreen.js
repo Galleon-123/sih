@@ -4,12 +4,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
-
-const RATING_CATEGORIES = [
-  { key: 'punctuality', label: 'Customer Punctuality', icon: 'time-outline' },
-  { key: 'cooperation', label: 'Cooperation & Respect', icon: 'handshake-outline' },
-  { key: 'payment', label: 'Payment Smoothness', icon: 'wallet-outline' },
-];
+import { useWorker } from '../context/WorkerContext';
 
 function StarRow({ value, onChange }) {
   return (
@@ -28,8 +23,15 @@ function StarRow({ value, onChange }) {
 }
 
 export const Screen_RatingScreen = ({ navigation }) => {
+  const { t } = useWorker();
   const [ratings, setRatings] = useState({ punctuality: 0, cooperation: 0, payment: 0 });
   const [submitted, setSubmitted] = useState(false);
+
+  const ratingCategories = [
+    { key: 'punctuality', label: t('customerPunctuality', 'Customer Punctuality'), icon: 'time-outline' },
+    { key: 'cooperation', label: t('cooperationRespect', 'Cooperation & Respect'), icon: 'handshake-outline' },
+    { key: 'payment', label: t('paymentSmoothness', 'Payment Smoothness'), icon: 'wallet-outline' },
+  ];
 
   const setRating = (key, val) => setRatings((prev) => ({ ...prev, [key]: val }));
   const allRated = Object.values(ratings).every((v) => v > 0);
@@ -44,16 +46,16 @@ export const Screen_RatingScreen = ({ navigation }) => {
           <View style={styles.successIcon}>
             <Ionicons name="checkmark-circle" size={64} color={colors.success} />
           </View>
-          <Text style={styles.successTitle}>Rating Submitted!</Text>
+          <Text style={styles.successTitle}>{t('ratingSubmitted', 'Rating Submitted!')}</Text>
           <Text style={styles.successSub}>
-            You rated this customer {avg}★. Your feedback helps maintain a high-quality cooperative ecosystem.
+            {t('ratingSubmittedDesc', 'You rated this customer')} {avg}★. {t('feedbackHelp', 'Your feedback helps maintain a high-quality cooperative ecosystem.')}
           </Text>
           <TouchableOpacity
             style={styles.doneBtn}
-            onPress={() => navigation.navigate('Home')}
+            onPress={() => navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] })}
             activeOpacity={0.85}
           >
-            <Text style={styles.doneBtnText}>Back to Home</Text>
+            <Text style={styles.doneBtnText}>{t('backToHome', 'Back to Dashboard')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -67,11 +69,11 @@ export const Screen_RatingScreen = ({ navigation }) => {
           <View style={styles.headerIcon}>
             <Ionicons name="star" size={28} color={colors.textInverse} />
           </View>
-          <Text style={styles.title}>Rate the Customer</Text>
-          <Text style={styles.subtitle}>Job completed! Share your experience to help fellow cooperative workers.</Text>
+          <Text style={styles.title}>{t('rateCustomer', 'Rate the Customer')}</Text>
+          <Text style={styles.subtitle}>{t('jobCompletedExperience', 'Job completed! Share your experience to help fellow cooperative workers.')}</Text>
         </View>
 
-        {RATING_CATEGORIES.map((cat) => (
+        {ratingCategories.map((cat) => (
           <View key={cat.key} style={styles.categoryCard}>
             <View style={styles.catHeader}>
               <View style={styles.catIcon}>
@@ -90,15 +92,15 @@ export const Screen_RatingScreen = ({ navigation }) => {
           activeOpacity={0.85}
         >
           <Ionicons name="checkmark-circle-outline" size={20} color={colors.textInverse} />
-          <Text style={styles.submitBtnText}>Submit Rating</Text>
+          <Text style={styles.submitBtnText}>{t('submitRating', 'Submit Rating')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.skipBtn}
-          onPress={() => navigation.navigate('Home')}
+          onPress={() => navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] })}
           activeOpacity={0.7}
         >
-          <Text style={styles.skipBtnText}>Skip for now</Text>
+          <Text style={styles.skipBtnText}>{t('skipForNow', 'Skip for now')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

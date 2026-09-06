@@ -110,8 +110,9 @@
       <div class="modal-body">
         <div style="margin-bottom:14px;">
           <label class="form-label">Select Worker (Token)</label>
-          <select class="form-input" id="assign-worker-select" required></select>
+          <select class="form-input" id="assign-worker-select" required onchange="onWorkerSelectChange(this.value)"></select>
         </div>
+        <div id="assign-trade-badge" style="display:none;margin-bottom:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:13px;font-weight:600;color:#1d4ed8;"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
           <div>
             <label class="form-label">Assessment Date</label>
@@ -219,9 +220,53 @@ function renderKanban() {
   select.innerHTML = ASSESSMENT_TOKENS.map(t => `<option value="${t.token}">${t.token} — ${t.name} (${t.trade})</option>`).join('');
 }
 
+// Trade → assessor/venue/time mapping
+const TRADE_CONFIG = {
+  'Electrician':      { assessor: 'Rajesh Kumar — Senior Trade Assessor',    venue: 'Delhi Technical Training Centre, Okhla Phase III',        time: '10:30 AM' },
+  'Plumber':          { assessor: 'Ramesh Verma — Technical Field Assessor', venue: 'Delhi Technical Training Centre, Okhla Phase III',        time: '09:00 AM' },
+  'Carpenter':        { assessor: 'Rajesh Kumar — Senior Trade Assessor',    venue: 'Delhi Technical Training Centre, Okhla Phase III',        time: '12:00 PM' },
+  'Technician':       { assessor: 'Ramesh Verma — Technical Field Assessor', venue: 'Delhi Technical Training Centre, Okhla Phase III',        time: '02:00 PM' },
+  'Cleaner':          { assessor: 'Sunita Rao — Hygiene & Care Assessor',    venue: 'Cooperative Women\'s Skill Centre, Saket',                 time: '09:00 AM' },
+  'Domestic Helper':  { assessor: 'Sunita Rao — Hygiene & Care Assessor',    venue: 'Cooperative Women\'s Skill Centre, Saket',                 time: '10:30 AM' },
+  'Painter':          { assessor: 'Rajesh Kumar — Senior Trade Assessor',    venue: 'Delhi Technical Training Centre, Okhla Phase III',        time: '03:30 PM' },
+  'Gardener':         { assessor: 'Sunita Rao — Hygiene & Care Assessor',    venue: 'Cooperative Women\'s Skill Centre, Saket',                 time: '12:00 PM' },
+  'Driver':           { assessor: 'Ramesh Verma — Technical Field Assessor', venue: 'Delhi Driving Assessment Centre, Lajpat Nagar',           time: '09:00 AM' },
+  'Caregiver':        { assessor: 'Sunita Rao — Hygiene & Care Assessor',    venue: 'Cooperative Women\'s Skill Centre, Saket',                 time: '02:00 PM' },
+};
+
+function getNextAvailableDate(assessorName) {
+  // Find latest scheduled date for this assessor and add 1 day
+  const dates = ASSESSMENT_SCHEDULED
+    .filter(s => s.assessor === assessorName.split('—')[0].trim())
+    .map(s => new Date(s.date.split(' ')[0]));
+  if (!dates.length) return '2026-09-07';
+  const latest = new Date(Math.max(...dates));
+  latest.setDate(latest.getDate() + 1);
+  return latest.toISOString().split('T')[0];
+}
+
+function onWorkerSelectChange(token) {
+  const worker = ASSESSMENT_TOKENS.find(t => t.token === token);
+  if (!worker) return;
+  const cfg = TRADE_CONFIG[worker.trade] || {};
+  const badge = document.getElementById('assign-trade-badge');
+  badge.style.display = 'block';
+  badge.innerHTML = `<span class="material-symbols-outlined" style="font-size:15px;vertical-align:middle;">work</span>&nbsp;Trade: <strong>${worker.trade}</strong> — assessor and venue auto-selected`;
+  if (cfg.assessor) {
+    const sel = document.getElementById('assign-assessor');
+    Array.from(sel.options).forEach(o => { if (o.text.startsWith(cfg.assessor.split('—')[0].trim())) o.selected = true; });
+  }
+  if (cfg.venue)   document.getElementById('assign-venue').value = cfg.venue;
+  if (cfg.time) {
+    const ts = document.getElementById('assign-time');
+    Array.from(ts.options).forEach(o => { o.selected = o.text === cfg.time; });
+  }
+  if (cfg.assessor) document.getElementById('assign-date').value = getNextAvailableDate(cfg.assessor);
+}
+
 function openAssignModalFor(token) {
   const select = document.getElementById('assign-worker-select');
-  if (select) select.value = token;
+  if (select) { select.value = token; onWorkerSelectChange(token); }
   showModal('assignModal');
 }
 

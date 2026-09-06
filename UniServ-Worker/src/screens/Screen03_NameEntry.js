@@ -10,7 +10,7 @@ import { useWorker } from '../context/WorkerContext';
 const STEPS = ['Phone', 'Name', 'KYC', 'Certification', 'Done'];
 
 export const Screen03_NameEntry = ({ navigation }) => {
-  const { updateWorker } = useWorker();
+  const { updateWorker, t } = useWorker();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [error, setError] = useState('');
@@ -49,12 +49,12 @@ export const Screen03_NameEntry = ({ navigation }) => {
             <View style={styles.iconCircle}>
               <Ionicons name="person" size={28} color={colors.primary} />
             </View>
-            <Text style={styles.title}>Your Name</Text>
-            <Text style={styles.subtitle}>Enter your full name as it appears on your Aadhaar card.</Text>
+            <Text style={styles.title}>{t('fullName', 'Your Name')}</Text>
+            <Text style={styles.subtitle}>{t('onboardingSub', 'Enter your full name as it appears on your Aadhaar card.')}</Text>
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.label}>First Name</Text>
+            <Text style={styles.label}>{t('fullName', 'First Name')}</Text>
             <TextInput
               style={styles.input}
               placeholder="e.g. Ravi"
@@ -83,7 +83,7 @@ export const Screen03_NameEntry = ({ navigation }) => {
           </View>
 
           <TouchableOpacity style={styles.btn} onPress={handleContinue} activeOpacity={0.85}>
-            <Text style={styles.btnText}>Continue to KYC</Text>
+            <Text style={styles.btnText}>{t('proceedToKyc', 'Continue to KYC')}</Text>
             <Ionicons name="arrow-forward" size={16} color={colors.textInverse} style={{ marginLeft: 8 }} />
           </TouchableOpacity>
         </ScrollView>

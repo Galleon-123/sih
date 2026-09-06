@@ -29,7 +29,7 @@
           <span style="color:#737686;font-size:13px;">—</span>
           <input type="date" style="border:none;outline:none;font-size:13px;color:#191c1e;font-family:'Work Sans';" value="2026-09-02"/>
         </div>
-        <button class="btn btn-primary btn-sm">
+        <button class="btn btn-primary btn-sm" onclick="exportAnalyticsCSV()">
           <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export CSV
         </button>
       </div>
@@ -270,6 +270,18 @@ function renderTopWorkers() {
       <td style="font-size:13px;font-weight:700;color:#d97706;">${w.rating}★</td>
       <td style="font-size:13px;font-weight:700;color:#059669;">${w.earnings}</td>
     </tr>`).join('');
+}
+
+function exportAnalyticsCSV() {
+  const rows = [
+    ['Month','Jobs','Revenue (INR)'],
+    ...MONTHLY.map(m => [m.month, m.jobs, m.rev]),
+  ];
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'analytics_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
 }
 
 document.addEventListener('DOMContentLoaded', () => {

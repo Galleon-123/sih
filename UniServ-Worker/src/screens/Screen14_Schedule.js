@@ -4,32 +4,16 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
+import { useWorker } from '../context/WorkerContext';
 import { MOCK_UPCOMING_BOOKINGS } from '../data/mockJobs';
 
-const SLOTS = [
-  { id: 'morning', label: 'Morning', time: '6 AM – 12 PM', icon: 'sunny-outline' },
-  { id: 'afternoon', label: 'Afternoon', time: '12 PM – 6 PM', icon: 'partly-sunny-outline' },
-  { id: 'evening', label: 'Evening', time: '6 PM – 10 PM', icon: 'moon-outline' },
-];
-
-const generateWeekDates = () => {
-  const dates = [];
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const today = new Date();
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    dates.push({
-      dayName: days[d.getDay()],
-      date: d.getDate(),
-      isToday: i === 0,
-      fullDate: d.toISOString().split('T')[0],
-    });
-  }
-  return dates;
-};
-
 export const Screen14_Schedule = () => {
+  const { t } = useWorker();
+  const SLOTS = [
+    { id: 'morning', label: t('morning', 'Morning'), time: '6 AM – 12 PM', icon: 'sunny-outline' },
+    { id: 'afternoon', label: t('afternoon', 'Afternoon'), time: '12 PM – 6 PM', icon: 'partly-sunny-outline' },
+    { id: 'evening', label: t('evening', 'Evening'), time: '6 PM – 10 PM', icon: 'moon-outline' },
+  ];
   const dates = generateWeekDates();
   const [selectedDate, setSelectedDate] = useState(dates[0].fullDate);
   const [availability, setAvailability] = useState({ morning: true, afternoon: true, evening: false });
@@ -50,7 +34,7 @@ export const Screen14_Schedule = () => {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.pageTitle}>My Schedule</Text>
+        <Text style={styles.pageTitle}>{t('mySchedule', 'My Schedule')}</Text>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dateStrip} contentContainerStyle={{ paddingHorizontal: 4 }}>
           {dates.map((d) => (
@@ -85,21 +69,21 @@ export const Screen14_Schedule = () => {
 
         <View style={styles.availabilityCard}>
           <View style={styles.availabilityHeader}>
-            <Text style={styles.sectionTitle}>Availability on {selectedDate}</Text>
+            <Text style={styles.sectionTitle}>{t('availability', 'Availability on')} {selectedDate}</Text>
             <TouchableOpacity
               style={[styles.offDayBtn, offDays.includes(selectedDate) && styles.offDayBtnActive]}
               onPress={() => toggleOffDay(selectedDate)}
               activeOpacity={0.8}
             >
               <Text style={[styles.offDayBtnText, offDays.includes(selectedDate) && styles.offDayBtnTextActive]}>
-                {offDays.includes(selectedDate) ? '🚫 Day Off' : 'Mark Off Day'}
+                {offDays.includes(selectedDate) ? `🚫 ${t('dayOff', 'Day Off')}` : t('markOffDay', 'Mark Off Day')}
               </Text>
             </TouchableOpacity>
           </View>
           {offDays.includes(selectedDate) ? (
             <View style={styles.offDayBanner}>
               <Ionicons name="moon" size={18} color={colors.textMuted} />
-              <Text style={styles.offDayBannerText}>You have marked this day as off. You will not receive job requests.</Text>
+              <Text style={styles.offDayBannerText}>{t('offDayNote', 'You have marked this day as off. You will not receive job requests.')}</Text>
             </View>
           ) : (
             SLOTS.map((slot) => (
@@ -122,7 +106,7 @@ export const Screen14_Schedule = () => {
           )}
         </View>
 
-        <Text style={styles.sectionTitle}>Upcoming Bookings</Text>
+        <Text style={styles.sectionTitle}>{t('upcomingBookings', 'Upcoming Bookings')}</Text>
         {MOCK_UPCOMING_BOOKINGS.map((booking) => (
           <View key={booking.id} style={styles.bookingCard}>
             <View style={styles.bookingDateBadge}>
@@ -147,7 +131,7 @@ export const Screen14_Schedule = () => {
         {MOCK_UPCOMING_BOOKINGS.length === 0 && (
           <View style={styles.noBookings}>
             <Ionicons name="calendar-outline" size={40} color={colors.textMuted} />
-            <Text style={styles.noBookingsText}>No upcoming bookings</Text>
+            <Text style={styles.noBookingsText}>{t('noUpcomingBookings', 'No upcoming bookings')}</Text>
           </View>
         )}
       </ScrollView>

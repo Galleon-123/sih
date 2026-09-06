@@ -5,6 +5,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { useJob } from '../context/JobContext';
+import { useWorker } from '../context/WorkerContext';
 
 // ── Utility: S-curve road interpolation fallback ──────────────────────────────
 const generateRoadRoutePoints = (oLat, oLng, dLat, dLng, n = 60) => {
@@ -52,6 +53,7 @@ const DURATION_SECS = 20; // animation duration for demo run
 
 export const Screen10_LiveTracking = ({ navigation }) => {
   const { activeJob, updateJobStatus } = useJob();
+  const { t } = useWorker();
 
   // Customer destination from job data
   const destCoords = useMemo(() => ({
@@ -74,6 +76,11 @@ export const Screen10_LiveTracking = ({ navigation }) => {
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         ({ coords: { latitude, longitude } }) => {
+          // Clamp to within 20 km of customer — prevents sim GPS (e.g. Tamil Nadu) routing to Delhi
+          const dLat = Math.abs(latitude - destCoords.lat);
+          const dLng = Math.abs(longitude - destCoords.lng);
+          const approxKm = Math.sqrt(dLat * dLat + dLng * dLng) * 111;
+          if (approxKm > 20) return; // too far — keep the simulated offset origin
           setOriginCoords({ lat: latitude, lng: longitude });
         },
         () => {},
@@ -174,69 +181,107 @@ export const Screen10_LiveTracking = ({ navigation }) => {
   const mapHtml = useMemo(() => {
     const tileUrl = mapLayer === 'satellite'
       ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-    const tileAttr = mapLayer === 'satellite' ? '&copy; Esri &amp; NASA' : '&copy; OpenStreetMap &amp; CartoDB';
-    const routeJson = JSON.stringify(routePoints.map((p) => [p.lat, p.lng]));
-    const initPt = routePoints[0] || originCoords;
+      : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    const tileAttr = mapLayer === 'satellite' ? '&copy; Esri' : '&copy; OpenStreetMap';
 
     return `<!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-html,body,#map{width:100%;height:100%;margin:0;padding:0;background:#E2E8F0;font-family:-apple-system,sans-serif;}
-.v-marker{display:flex;align-items:center;justify-content:center;width:44px;height:44px;background:#2563EB;border-radius:22px;border:3px solid #fff;box-shadow:0 4px 12px rgba(37,99,235,.45);font-size:20px;transition:transform .2s linear;}
-.d-marker{position:relative;display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:#10B981;border-radius:18px;border:3px solid #fff;box-shadow:0 4px 12px rgba(16,185,129,.45);font-size:16px;}
-.pulse{position:absolute;width:60px;height:60px;border-radius:50%;background:rgba(16,185,129,.25);animation:pw 2s infinite ease-out;pointer-events:none;}
-@keyframes pw{0%{transform:scale(.5);opacity:1}100%{transform:scale(2);opacity:0}}
-.leaflet-control-attribution{font-size:8px!important;opacity:.6;}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    html, body, #map { width: 100%; height: 100%; margin: 0; padding: 0; background: #e5e7eb; }
+    .worker-marker {
+      font-size: 24px; text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: transform 0.2s linear;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dest-pulse {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #EF4444; border: 3px solid #fff;
+      box-shadow: 0 0 0 4px rgba(239,68,68,0.35);
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.6); }
+      70% { box-shadow: 0 0 0 12px rgba(239,68,68,0); }
+      100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    }
+    .leaflet-control-attribution { font-size: 8px !important; }
+  </style>
 </head>
 <body>
-<div id="map"></div>
-<script>
-const map=L.map('map',{zoomControl:false,attributionControl:true}).setView([${destCoords.lat},${destCoords.lng}],${zoomLevel});
-L.tileLayer('${tileUrl}',{maxZoom:19,attribution:'${tileAttr}'}).addTo(map);
-const rc=${routeJson};
-L.polyline(rc,{color:'#3B82F6',weight:8,opacity:.35,lineCap:'round',lineJoin:'round'}).addTo(map);
-const mainLine=L.polyline(rc,{color:'#2563EB',weight:5,opacity:.95,lineCap:'round',lineJoin:'round',dashArray:'1,10'}).addTo(map);
-const dIcon=L.divIcon({className:'',html:'<div class="pulse"></div><div class="d-marker">📍</div>',iconSize:[36,36],iconAnchor:[18,18]});
-L.marker([${destCoords.lat},${destCoords.lng}],{icon:dIcon}).addTo(map).bindPopup('<b>Customer Doorstep</b><br>${addrInfo.locality}');
-const vIcon=L.divIcon({className:'',html:'<div class="v-marker" id="vm">${emoji}</div>',iconSize:[44,44],iconAnchor:[22,22]});
-const vMarker=L.marker([${initPt.lat},${initPt.lng}],{icon:vIcon}).addTo(map);
-map.fitBounds(mainLine.getBounds(),{padding:[40,40]});
-window.updateVehicle=function(lat,lng,brg){
-  if(vMarker) vMarker.setLatLng([lat,lng]);
-  const d=document.getElementById('vm');
-  if(d) d.style.transform='rotate('+brg+'deg)';
-};
-</script>
+  <div id="map"></div>
+  <script>
+    const map = L.map('map', { zoomControl: false }).setView([${destCoords.lat}, ${destCoords.lng}], 15);
+    L.tileLayer('${tileUrl}', { attribution: '${tileAttr}', maxZoom: 19 }).addTo(map);
+
+    // Route polyline
+    const routePts = ${JSON.stringify(routePoints.map((p) => [p.lat, p.lng]))};
+    const polyline = L.polyline(routePts, {
+      color: '#2563EB', weight: 5, opacity: 0.85, dashArray: '8, 6', lineCap: 'round'
+    }).addTo(map);
+    map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+
+    // Destination marker
+    const destIcon = L.divIcon({
+      className: '', html: '<div class="dest-pulse"></div>',
+      iconSize: [22, 22], iconAnchor: [11, 11]
+    });
+    L.marker([${destCoords.lat}, ${destCoords.lng}], { icon: destIcon })
+      .addTo(map)
+      .bindPopup('<b>Customer Destination</b><br>${addrInfo.locality || addrInfo.city}');
+
+    // Worker moving marker
+    const workerIcon = L.divIcon({
+      className: 'worker-marker',
+      html: '<div id="wEmoji" style="transform: rotate(${bearing}deg)">${emoji}</div>',
+      iconSize: [30, 30], iconAnchor: [15, 15]
+    });
+    const workerMarker = L.marker([${originCoords.lat}, ${originCoords.lng}], { icon: workerIcon }).addTo(map);
+
+    // Live update listener
+    window.addEventListener('message', (e) => {
+      try {
+        const d = JSON.parse(e.data);
+        if (d.type === 'POS') {
+          workerMarker.setLatLng([d.lat, d.lng]);
+          const el = document.getElementById('wEmoji');
+          if (el) el.style.transform = 'rotate(' + d.bearing + 'deg)';
+          if (d.pan) map.panTo([d.lat, d.lng], { animate: true, duration: 0.3 });
+        }
+      } catch(_) {}
+    });
+  </script>
 </body>
 </html>`;
-  }, [mapLayer, routePoints, destCoords, zoomLevel, addrInfo, emoji, originCoords]);
+  }, [mapLayer, originCoords, destCoords, routePoints, addrInfo, emoji, bearing]);
 
-  // Push smooth vehicle movement updates directly to iframe DOM without re-rendering HTML
+  // Post live vehicle position into iframe
   useEffect(() => {
-    if (iframeRef.current && iframeRef.current.contentWindow && iframeRef.current.contentWindow.updateVehicle) {
-      try {
-        iframeRef.current.contentWindow.updateVehicle(currentPt.lat, currentPt.lng, bearing);
-      } catch (_) {}
+    if (Platform.OS === 'web' && iframeRef.current?.contentWindow) {
+      const msg = JSON.stringify({
+        type: 'POS',
+        lat: currentPt.lat,
+        lng: currentPt.lng,
+        bearing,
+        pan: false,
+      });
+      iframeRef.current.contentWindow.postMessage(msg, '*');
     }
   }, [currentPt, bearing]);
 
-  // ── Progress bar pulse anim ─────────────────────────────────────────────────
+  // Animated progress bar width
   const barAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(barAnim, { toValue: 1, duration: 2000, useNativeDriver: false }),
-        Animated.timing(barAnim, { toValue: 0.3, duration: 500, useNativeDriver: false }),
-      ])
-    ).start();
-  }, []);
+    Animated.timing(barAnim, {
+      toValue: progress,
+      duration: 150,
+      useNativeDriver: false,
+    }).start();
+  }, [progress]);
 
   const handleArrived = () => {
     updateJobStatus('arrived');
@@ -250,9 +295,9 @@ window.updateVehicle=function(lat,lng,brg){
         <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.title}>Live Navigation</Text>
+        <Text style={styles.title}>{t('liveNavigation', 'Live Navigation')}</Text>
         <View style={styles.etaBadge}>
-          <Text style={styles.etaText}>{remainingEta} min</Text>
+          <Text style={styles.etaText}>{remainingEta} {t('min', 'min')}</Text>
         </View>
       </View>
 
@@ -275,7 +320,7 @@ window.updateVehicle=function(lat,lng,brg){
             onPress={() => { setProgress(1); setHasArrived(true); setSpeedKmh(0); }}
           >
             <Ionicons name="play-forward" size={13} color={colors.primary} />
-            <Text style={styles.skipTxt}>Skip</Text>
+            <Text style={styles.skipTxt}>{t('skip', 'Skip')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -334,7 +379,7 @@ window.updateVehicle=function(lat,lng,brg){
               color={mapLayer === 'satellite' ? '#fff' : colors.textPrimary}
             />
             <Text style={[styles.layerTxt, mapLayer === 'satellite' && { color: '#fff' }]}>
-              {mapLayer === 'satellite' ? 'Street' : 'Satellite'}
+              {mapLayer === 'satellite' ? t('street', 'Street') : t('satellite', 'Satellite')}
             </Text>
           </TouchableOpacity>
 
@@ -354,7 +399,7 @@ window.updateVehicle=function(lat,lng,brg){
           <View style={[styles.gpsDot, hasArrived && { backgroundColor: colors.success }]} />
           <Text style={styles.gpsText}>
             {hasArrived
-              ? `ARRIVED · ${addrInfo.city.toUpperCase()}`
+              ? `${t('arrived', 'ARRIVED').toUpperCase()} · ${addrInfo.city.toUpperCase()}`
               : `LIVE GPS · ${addrInfo.locality || addrInfo.city}, ${addrInfo.state}`}
           </Text>
         </View>
@@ -369,19 +414,19 @@ window.updateVehicle=function(lat,lng,brg){
       {/* ── Telemetry Footer ── */}
       <View style={styles.telemetry}>
         <View style={styles.metCol}>
-          <Text style={styles.metLabel}>DISTANCE</Text>
+          <Text style={styles.metLabel}>{t('distance', 'DISTANCE')}</Text>
           <Text style={styles.metVal}>{hasArrived ? '0.0' : remainingKm}<Text style={styles.metUnit}> km</Text></Text>
         </View>
         <View style={styles.metDivider} />
         <View style={styles.metCol}>
-          <Text style={styles.metLabel}>LIVE ETA</Text>
+          <Text style={styles.metLabel}>{t('liveEta', 'LIVE ETA')}</Text>
           <Text style={[styles.metVal, { color: hasArrived ? colors.success : colors.primary }]}>
             {hasArrived ? '0' : remainingEta}<Text style={styles.metUnit}> min</Text>
           </Text>
         </View>
         <View style={styles.metDivider} />
         <View style={styles.metCol}>
-          <Text style={styles.metLabel}>DESTINATION</Text>
+          <Text style={styles.metLabel}>{t('destination', 'DESTINATION')}</Text>
           <Text style={[styles.metVal, { fontSize: 11, color: colors.primary }]} numberOfLines={1}>
             {addrInfo.locality || addrInfo.city}
           </Text>
@@ -397,7 +442,7 @@ window.updateVehicle=function(lat,lng,brg){
               {
                 width: barAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: ['0%', `${Math.round(progress * 100)}%`],
+                  outputRange: ['0%', '100%'],
                 }),
               },
             ]}
@@ -416,18 +461,18 @@ window.updateVehicle=function(lat,lng,brg){
           </View>
           <View style={styles.etaCard}>
             <Text style={styles.etaMins}>{remainingEta}</Text>
-            <Text style={styles.etaMin}>min</Text>
+            <Text style={styles.etaMin}>{t('min', 'min')}</Text>
           </View>
         </View>
 
         <View style={styles.actionRow}>
           <TouchableOpacity style={styles.callBtn} activeOpacity={0.8}>
             <Ionicons name="call-outline" size={20} color={colors.primary} />
-            <Text style={styles.callTxt}>Call Customer</Text>
+            <Text style={styles.callTxt}>{t('callCustomer', 'Call Customer')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.arrivedBtn} onPress={handleArrived} activeOpacity={0.85}>
             <Ionicons name="checkmark-circle" size={20} color="#fff" />
-            <Text style={styles.arrivedTxt}>I've Arrived</Text>
+            <Text style={styles.arrivedTxt}>{t('arrivedDoorstep', "I've Arrived")}</Text>
           </TouchableOpacity>
         </View>
       </View>

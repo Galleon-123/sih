@@ -8,7 +8,7 @@ import { workerTypes } from '../data/workerTypes';
 import { useWorker } from '../context/WorkerContext';
 
 export const Screen05_CertificationCheck = ({ navigation }) => {
-  const { updateWorker } = useWorker();
+  const { updateWorker, t } = useWorker();
   const [selectedTrade, setSelectedTrade] = useState('electrician');
 
   const handleCertified = async () => {
@@ -32,11 +32,11 @@ export const Screen05_CertificationCheck = ({ navigation }) => {
           <View style={styles.iconCircle}>
             <Ionicons name="ribbon" size={28} color={colors.primary} />
           </View>
-          <Text style={styles.title}>Your Trade & Certification</Text>
-          <Text style={styles.subtitle}>Select your primary trade and tell us about your certification status.</Text>
+          <Text style={styles.title}>{t('certCheckTitle', 'Your Trade & Certification')}</Text>
+          <Text style={styles.subtitle}>{t('certCheckSub', 'Select your primary trade and tell us about your certification status.')}</Text>
         </View>
 
-        <Text style={styles.sectionLabel}>Select Your Primary Trade</Text>
+        <Text style={styles.sectionLabel}>{t('selectTrade', 'Select Your Primary Trade')}</Text>
         <View style={styles.tradeGrid}>
           {workerTypes.map((w) => (
             <TouchableOpacity
@@ -54,13 +54,13 @@ export const Screen05_CertificationCheck = ({ navigation }) => {
                 <Ionicons name={w.icon} size={22} color={w.color} />
               </View>
               <Text style={[styles.tradeLabel, selectedTrade === w.id && styles.tradeLabelSelected]}>
-                {w.label}
+                {t(`trade${w.id.charAt(0).toUpperCase() + w.id.slice(1)}`, w.label)}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <Text style={styles.questionText}>Are you certified in your trade?</Text>
+        <Text style={styles.questionText}>{t('certCheckTitle', 'Are you certified in your trade?')}</Text>
         <Text style={styles.questionSubtext}>
           A formal certification means you have completed an ITI, NSDC, or recognized cooperative training program.
         </Text>
@@ -70,8 +70,8 @@ export const Screen05_CertificationCheck = ({ navigation }) => {
             <Ionicons name="checkmark-circle" size={28} color={colors.success} />
           </View>
           <View style={styles.certifiedBtnContent}>
-            <Text style={styles.certifiedBtnTitle}>Yes, I am Certified</Text>
-            <Text style={styles.certifiedBtnSubtitle}>Upload your trade certificate for verification</Text>
+            <Text style={styles.certifiedBtnTitle}>{t('hasCertificate', 'Yes, I am Certified')}</Text>
+            <Text style={styles.certifiedBtnSubtitle}>{t('uploadCertBtn', 'Upload your trade certificate for verification')}</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
         </TouchableOpacity>
@@ -81,8 +81,8 @@ export const Screen05_CertificationCheck = ({ navigation }) => {
             <Ionicons name="school" size={28} color={colors.warning} />
           </View>
           <View style={styles.certifiedBtnContent}>
-            <Text style={styles.notCertifiedBtnTitle}>No, I Need Assessment</Text>
-            <Text style={styles.notCertifiedBtnSubtitle}>Get a practical assessment token assigned by the cooperative</Text>
+            <Text style={styles.notCertifiedBtnTitle}>{t('noCertificate', 'No, I Need Assessment')}</Text>
+            <Text style={styles.notCertifiedBtnSubtitle}>{t('getAssessmentToken', 'Get a practical assessment token assigned by the cooperative')}</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
         </TouchableOpacity>

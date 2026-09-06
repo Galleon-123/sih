@@ -8,7 +8,7 @@ import { useWorker } from '../context/WorkerContext';
 import LANGUAGES from '../data/languages.json';
 
 export const Screen01_LanguageSelection = ({ navigation }) => {
-  const { updateWorker, setLanguage, language, isLoggedIn } = useWorker();
+  const { setLanguage, language, isLoggedIn, loginAsDemo, t } = useWorker();
   const [selected, setSelected] = useState(language || 'en');
   const [search, setSearch] = useState('');
   const [filterTab, setFilterTab] = useState('popular'); // 'popular' | 'all'
@@ -23,6 +23,11 @@ export const Screen01_LanguageSelection = ({ navigation }) => {
     return matchesSearch;
   });
 
+  const handleSelectLanguage = async (code) => {
+    setSelected(code);
+    await setLanguage(code);
+  };
+
   const handleContinue = async () => {
     await setLanguage(selected);
     if (navigation.canGoBack() && isLoggedIn) {
@@ -32,6 +37,12 @@ export const Screen01_LanguageSelection = ({ navigation }) => {
     }
   };
 
+  const handleDemoLogin = async () => {
+    await setLanguage(selected);
+    loginAsDemo(selected);
+    navigation.replace('MainTabs');
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -39,18 +50,18 @@ export const Screen01_LanguageSelection = ({ navigation }) => {
           <View style={styles.logoCircle}>
             <Ionicons name="construct" size={36} color={colors.textInverse} />
           </View>
-          <Text style={styles.appName}>UniServ Worker</Text>
-          <Text style={styles.tagline}>India's Cooperative Artisan Platform</Text>
+          <Text style={styles.appName}>{t('appName', 'UniServ Worker')}</Text>
+          <Text style={styles.tagline}>{t('tagline', "India's Cooperative Artisan Platform")}</Text>
         </View>
 
-        <Text style={styles.heading}>Select Your Language / भाषा चुनें</Text>
-        <Text style={styles.subheading}>Available in all 23 Scheduled Indian Languages for cooperative workers across India.</Text>
+        <Text style={styles.heading}>{t('selectLanguageTitle', 'Select Your Language / भाषा चुनें')}</Text>
+        <Text style={styles.subheading}>{t('selectLanguageSub', 'Available in all 23 Scheduled Indian Languages for cooperative workers across India.')}</Text>
 
         <View style={styles.searchBar}>
           <Ionicons name="search" size={18} color={colors.textMuted} style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search language (e.g. Hindi, Tamil, Bangla)..."
+            placeholder={t('searchLanguagePlaceholder', 'Search language (e.g. Hindi, Tamil, Bangla)...')}
             placeholderTextColor={colors.textMuted}
             value={search}
             onChangeText={setSearch}
@@ -69,7 +80,7 @@ export const Screen01_LanguageSelection = ({ navigation }) => {
               onPress={() => setFilterTab('popular')}
             >
               <Text style={[styles.tabBtnText, filterTab === 'popular' && styles.tabBtnTextActive]}>
-                Popular (9)
+                {t('popularLanguages', 'Popular (9)')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -77,7 +88,7 @@ export const Screen01_LanguageSelection = ({ navigation }) => {
               onPress={() => setFilterTab('all')}
             >
               <Text style={[styles.tabBtnText, filterTab === 'all' && styles.tabBtnTextActive]}>
-                All 23 Languages
+                {t('allLanguages', 'All 23 Languages')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -88,7 +99,7 @@ export const Screen01_LanguageSelection = ({ navigation }) => {
             <TouchableOpacity
               key={lang.code}
               style={[styles.langCard, selected === lang.code && styles.langCardSelected]}
-              onPress={() => setSelected(lang.code)}
+              onPress={() => handleSelectLanguage(lang.code)}
               activeOpacity={0.8}
             >
               {selected === lang.code && (
@@ -108,13 +119,18 @@ export const Screen01_LanguageSelection = ({ navigation }) => {
         </View>
 
         <TouchableOpacity style={styles.continueBtn} onPress={handleContinue} activeOpacity={0.85}>
-          <Text style={styles.continueBtnText}>Continue / आगे बढ़ें</Text>
+          <Text style={styles.continueBtnText}>{t('continueWithHindi', 'Continue / आगे बढ़ें')}</Text>
           <Ionicons name="arrow-forward" size={18} color={colors.textInverse} style={{ marginLeft: 8 }} />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.demoBtn} onPress={handleDemoLogin} activeOpacity={0.8}>
+          <Ionicons name="flask-outline" size={16} color={colors.primary} style={{ marginRight: 8 }} />
+          <Text style={styles.demoBtnText}>{t('demoLogin', 'Demo Login')}</Text>
         </TouchableOpacity>
 
         <View style={styles.footer}>
           <Ionicons name="shield-checkmark-outline" size={14} color={colors.textMuted} />
-          <Text style={styles.footerText}>Ministry of Cooperation · MSCS Act 2002 Compliant</Text>
+          <Text style={styles.footerText}>{t('mscsCompliant', 'Ministry of Cooperation · MSCS Act 2002 Compliant')}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -179,6 +195,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   continueBtnText: { color: colors.textInverse, fontSize: 16, fontWeight: '700' },
+  demoBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: colors.primary, borderRadius: 14,
+    paddingVertical: 12, marginBottom: 20,
+    backgroundColor: 'transparent',
+  },
+  demoBtnText: { color: colors.primary, fontSize: 14, fontWeight: '600' },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   footerText: { fontSize: 11, color: colors.textMuted, fontWeight: '500' },
 });

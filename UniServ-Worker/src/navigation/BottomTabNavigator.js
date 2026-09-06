@@ -45,9 +45,9 @@ export const BottomTabNavigator = () => {
       })}
     >
       <Tab.Screen name="Home" component={Screen07_HomeDashboard} options={{ tabBarLabel: t('tabHome', 'Home') }} />
-      <Tab.Screen name="Jobs" component={Screen08_JobRequest} options={{ tabBarLabel: t('acceptJob', 'Jobs') }} />
-      <Tab.Screen name="Earnings" component={Screen11_EarningsWallet} options={{ tabBarLabel: t('earnings', 'Earnings') }} />
-      <Tab.Screen name="Schedule" component={Screen14_Schedule} options={{ tabBarLabel: t('mySchedule', 'Schedule') }} />
+      <Tab.Screen name="Jobs" component={Screen08_JobRequest} options={{ tabBarLabel: t('tabJobs', 'Jobs') }} />
+      <Tab.Screen name="Earnings" component={Screen11_EarningsWallet} options={{ tabBarLabel: t('tabEarnings', 'Earnings') }} />
+      <Tab.Screen name="Schedule" component={Screen14_Schedule} options={{ tabBarLabel: t('tabSchedule', 'Schedule') }} />
       <Tab.Screen name="Profile" component={Screen16_Profile} options={{ tabBarLabel: t('tabProfile', 'Profile') }} />
     </Tab.Navigator>
   );

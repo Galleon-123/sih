@@ -5,6 +5,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Rect, Text as SvgText } from 'react-native-svg';
 import { colors } from '../theme/colors';
+import { useWorker } from '../context/WorkerContext';
 import { MOCK_DEMAND_AREAS } from '../data/mockJobs';
 import { workerTypes } from '../data/workerTypes';
 
@@ -30,6 +31,7 @@ const AREA_LABELS = [
 ];
 
 export const Screen15_DemandHeatmap = ({ navigation }) => {
+  const { t } = useWorker();
   const [selectedTrade, setSelectedTrade] = useState('all');
 
   const heatData = useMemo(() => {
@@ -61,13 +63,13 @@ export const Screen15_DemandHeatmap = ({ navigation }) => {
           <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.pageTitle}>Cooperative Demand Heatmap</Text>
+          <Text style={styles.pageTitle}>{t('demandHeatmap', 'Cooperative Demand Heatmap')}</Text>
           <View style={{ width: 40 }} />
         </View>
 
         <View style={styles.subHeader}>
           <Ionicons name="location" size={16} color={colors.primary} />
-          <Text style={styles.subHeaderText}>Delhi NCR Cooperative Ward Radius</Text>
+          <Text style={styles.subHeaderText}>{t('delhiNcrWardRadius', 'Delhi NCR Cooperative Ward Radius')}</Text>
         </View>
 
         {/* Trade Filter Horizontal Strip */}
@@ -76,25 +78,25 @@ export const Screen15_DemandHeatmap = ({ navigation }) => {
             style={[styles.filterChip, selectedTrade === 'all' && styles.filterChipActive]}
             onPress={() => setSelectedTrade('all')}
           >
-            <Text style={[styles.filterChipText, selectedTrade === 'all' && styles.filterChipTextActive]}>All 10 Trades</Text>
+            <Text style={[styles.filterChipText, selectedTrade === 'all' && styles.filterChipTextActive]}>{t('allTrades', 'All Trades')}</Text>
           </TouchableOpacity>
-          {workerTypes.map((t) => (
+          {workerTypes.map((tr) => (
             <TouchableOpacity
-              key={t.id}
-              style={[styles.filterChip, selectedTrade === t.id && styles.filterChipActive]}
-              onPress={() => setSelectedTrade(t.id)}
+              key={tr.id}
+              style={[styles.filterChip, selectedTrade === tr.id && styles.filterChipActive]}
+              onPress={() => setSelectedTrade(tr.id)}
             >
-              <Text style={[styles.filterChipText, selectedTrade === t.id && styles.filterChipTextActive]}>{t.label}</Text>
+              <Text style={[styles.filterChipText, selectedTrade === tr.id && styles.filterChipTextActive]}>{t(tr.id, tr.label)}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
 
         <View style={styles.mapCard}>
           <View style={styles.mapHeader}>
-            <Text style={styles.mapTitle}>Live Demand Density</Text>
+            <Text style={styles.mapTitle}>{t('liveDemandDensity', 'Live Demand Density')}</Text>
             <View style={styles.liveChip}>
               <View style={styles.liveDot} />
-              <Text style={styles.liveText}>Live Sync</Text>
+              <Text style={styles.liveText}>{t('liveSync', 'Live Sync')}</Text>
             </View>
           </View>
           <View style={{ alignItems: 'center' }}>
@@ -130,33 +132,33 @@ export const Screen15_DemandHeatmap = ({ navigation }) => {
           <View style={styles.legend}>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: '#86EFAC' }]} />
-              <Text style={styles.legendText}>Low</Text>
+              <Text style={styles.legendText}>{t('low', 'Low')}</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: '#84CC16' }]} />
-              <Text style={styles.legendText}>Moderate</Text>
+              <Text style={styles.legendText}>{t('moderate', 'Moderate')}</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
-              <Text style={styles.legendText}>High</Text>
+              <Text style={styles.legendText}>{t('high', 'High')}</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: '#EF4444' }]} />
-              <Text style={styles.legendText}>Surge</Text>
+              <Text style={styles.legendText}>{t('surge', 'Surge')}</Text>
             </View>
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>High Demand Cooperative Wards</Text>
+        <Text style={styles.sectionTitle}>{t('highDemandWards', 'High Demand Cooperative Wards')}</Text>
         {filteredAreas.map((item, i) => (
           <View key={i} style={styles.areaCard}>
             <View style={styles.areaLeft}>
               <Text style={styles.areaName}>{item.area}</Text>
-              <Text style={styles.areaService}>{item.service} · {item.distance}</Text>
+              <Text style={styles.areaService}>{t(item.service, item.service)} · {item.distance}</Text>
             </View>
             <View style={[styles.levelBadge, { backgroundColor: getLevelColor(item.level) + '20' }]}>
               <Text style={[styles.levelText, { color: getLevelColor(item.level) }]}>
-                {item.level.toUpperCase()} DEMAND
+                {item.level.toUpperCase()} {t('demand', 'DEMAND')}
               </Text>
             </View>
           </View>

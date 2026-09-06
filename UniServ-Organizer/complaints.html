@@ -78,7 +78,7 @@
               <table class="data-table" id="complaints-table">
                 <thead>
                   <tr>
-                    <th>CMP ID</th><th>Booking</th><th>Customer</th><th>Artisan</th>
+                    <th>CMP ID</th><th>Booking</th><th>Customer</th><th>Artisan</th><th>Trade</th>
                     <th>Issue Category</th><th>Status</th><th>Date</th><th>Action</th>
                   </tr>
                 </thead>
@@ -130,14 +130,14 @@
 <script src="js/app.js"></script>
 <script>
 const COMPLAINTS = [
-  { id:'CMP-0041', booking:'BKG-8810', customer:'Anjali Mehta', worker:'Bharat Sharma', issue:'Work quality / Leakage recurrence', status:'open', date:'2026-09-04', hasPhoto:true, desc:'Bathroom tiles were not sealed properly. Water began seeping into wall within 24 hours.' },
-  { id:'CMP-0040', booking:'BKG-8790', customer:'Rohit Jain', worker:'Mohan Yadav', issue:'Worker delayed arrival', status:'open', date:'2026-09-03', hasPhoto:false, desc:'Worker accepted emergency job but reached 50 minutes past promised ETA.' },
-  { id:'CMP-0039', booking:'BKG-8781', customer:'Sunita Kapoor', worker:'Deepa Rawat', issue:'Extra scope pricing disagreement', status:'open', date:'2026-09-03', hasPhoto:true, desc:'Was billed ₹250 for extra balcony scrub without verbal agreement before starting.' },
-  { id:'CMP-0038', booking:'BKG-8765', customer:'Manoj Tiwari', worker:'Ravi Kumar', issue:'Property damage claim', status:'reviewing', date:'2026-09-02', hasPhoto:true, desc:'Minor crack on decorative switchboard frame during conduit drilling. Claiming ₹1,200 from Seva Suraksha pool.' },
-  { id:'CMP-0037', booking:'BKG-8750', customer:'Pooja Mishra', worker:'Ganesh Mishra', issue:'Incomplete plumbing scope', status:'reviewing', date:'2026-09-02', hasPhoto:false, desc:'Overhead water tank ball valve installed but overflow pipe clamp remains unfastened.' },
-  { id:'CMP-0036', booking:'BKG-8741', customer:'Amit Sharma', worker:'Naresh Pal', issue:'Route deviation delay', status:'reviewing', date:'2026-09-01', hasPhoto:false, desc:'Chauffeur took longer outstation toll route without passenger prior confirmation.' },
-  { id:'CMP-0035', booking:'BKG-8700', customer:'Kavita Singh', worker:'Arjun Rawat', issue:'Hinge realignment rework', status:'resolved', date:'2026-08-31', hasPhoto:false, desc:'Kitchen hydraulic cabinet channel loose. Re-attended at ₹0 under 30-day warranty.' },
-  { id:'CMP-0034', booking:'BKG-8685', customer:'Pradeep Kumar', worker:'Kishore Kumar', issue:'Billing clarification', status:'resolved', date:'2026-08-30', hasPhoto:true, desc:'Customer queried +₹100 overtime surcharge; explained 2-hr overtime policy.' },
+  { id:'CMP-0041', booking:'BKG-8810', customer:'Anjali Mehta', worker:'Bharat Sharma', workerTrade:'Plumber', issue:'Work quality / Leakage recurrence', status:'open', date:'2026-09-04', hasPhoto:true, desc:'Bathroom tiles were not sealed properly. Water began seeping into wall within 24 hours.' },
+  { id:'CMP-0040', booking:'BKG-8790', customer:'Rohit Jain', worker:'Mohan Yadav', workerTrade:'Driver', issue:'Worker delayed arrival', status:'open', date:'2026-09-03', hasPhoto:false, desc:'Worker accepted emergency job but reached 50 minutes past promised ETA.' },
+  { id:'CMP-0039', booking:'BKG-8781', customer:'Sunita Kapoor', worker:'Deepa Rawat', workerTrade:'Cleaner', issue:'Extra scope pricing disagreement', status:'open', date:'2026-09-03', hasPhoto:true, desc:'Was billed ₹250 for extra balcony scrub without verbal agreement before starting.' },
+  { id:'CMP-0038', booking:'BKG-8765', customer:'Manoj Tiwari', worker:'Ravi Kumar', workerTrade:'Electrician', issue:'Property damage claim', status:'reviewing', date:'2026-09-02', hasPhoto:true, desc:'Minor crack on decorative switchboard frame during conduit drilling. Claiming ₹1,200 from Seva Suraksha pool.' },
+  { id:'CMP-0037', booking:'BKG-8750', customer:'Pooja Mishra', worker:'Ganesh Mishra', workerTrade:'Plumber', issue:'Incomplete plumbing scope', status:'reviewing', date:'2026-09-02', hasPhoto:false, desc:'Overhead water tank ball valve installed but overflow pipe clamp remains unfastened.' },
+  { id:'CMP-0036', booking:'BKG-8741', customer:'Amit Sharma', worker:'Naresh Pal', workerTrade:'Driver', issue:'Route deviation delay', status:'reviewing', date:'2026-09-01', hasPhoto:false, desc:'Chauffeur took longer outstation toll route without passenger prior confirmation.' },
+  { id:'CMP-0035', booking:'BKG-8700', customer:'Kavita Singh', worker:'Arjun Rawat', workerTrade:'Carpenter', issue:'Hinge realignment rework', status:'resolved', date:'2026-08-31', hasPhoto:false, desc:'Kitchen hydraulic cabinet channel loose. Re-attended at ₹0 under 30-day warranty.' },
+  { id:'CMP-0034', booking:'BKG-8685', customer:'Pradeep Kumar', worker:'Kishore Kumar', workerTrade:'Electrician', issue:'Billing clarification', status:'resolved', date:'2026-08-30', hasPhoto:true, desc:'Customer queried +₹100 overtime surcharge; explained 2-hr overtime policy.' },
 ];
 
 const S_BADGE = {
@@ -163,6 +163,7 @@ function filterComplaints() {
       <td><span style="font-size:12px;color:#737686;">${c.booking}</span></td>
       <td><strong>${c.customer}</strong></td>
       <td>${c.worker}</td>
+      <td><span style="background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;">${c.workerTrade || '—'}</span></td>
       <td><span style="font-size:13px;">${c.issue}</span></td>
       <td>${S_BADGE[c.status]}</td>
       <td style="font-size:12px;color:#737686;">${c.date}</td>
@@ -200,6 +201,7 @@ function showPanel(id) {
     ['Booking Reference', c.booking],
     ['Customer Name', c.customer],
     ['Assigned Artisan', c.worker],
+    ['Worker Trade', c.workerTrade || '—'],
     ['Grievance Type', c.issue],
     ['Date Reported', c.date],
   ].map(([k,v]) => `
@@ -240,17 +242,22 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof UniServComplaints !== 'undefined') {
     UniServComplaints.subscribeAll((complaints) => {
       COMPLAINTS.length = 0;
-      complaints.forEach((c) => COMPLAINTS.push({
-        id: c.id,
-        booking: c.bookingId || '',
-        customer: c.userId || 'Customer',
-        worker: c.workerId || 'Worker',
-        category: c.category || 'Issue',
-        description: c.description || '',
-        status: c.status || 'received',
-        date: c.createdAt?.toDate?.()?.toLocaleDateString?.() || '',
-        severity: c.category?.toLowerCase?.().includes?.('safety') ? 'high' : 'medium',
-      }));
+      complaints.forEach((c) => {
+        const createdDate = c.createdAt ? new Date(typeof c.createdAt === 'string' ? c.createdAt : c.createdAt.toDate?.() || c.createdAt) : null;
+        COMPLAINTS.push({
+          id: c.id,
+          booking: c.bookingId || c.booking || '',
+          customer: c.customerName || c.userName || c.userId || 'Customer',
+          worker: c.workerName || c.workerId || 'Worker',
+          workerTrade: c.workerTrade || c.trade || '—',
+          issue: c.subject || c.issue || c.category || 'Issue',
+          desc: c.desc || c.description || c.subject || '',
+          hasPhoto: c.hasPhoto || false,
+          status: c.status || 'open',
+          date: createdDate ? createdDate.toLocaleDateString() : '',
+          severity: (c.subject || c.category || '').toLowerCase().includes('safety') ? 'high' : 'medium',
+        });
+      });
       filterComplaints();
     });
   } else {

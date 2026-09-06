@@ -1,0 +1,835 @@
+Smart India Hackathon 2026
+Problem Statement ID :26089
+Problem Statement Title	:Cooperative Gig Services Platform for Household & Community Services
+Description:
+• Background Labour Cooperative Federations and Labour Cooperative Societies possess a large pool of skilled workers such as electricians, plumbers, carpenters, painters, domestic helpers, caregivers, drivers, gardeners,cleaners, and technicians. However, they lack a structured digital platform to connect these workers with households and institutions requiring such services.Private platforms currently dominate this market, while cooperative workers often remain underutilized despite having skills and local presence.
+• Problem Statement To develop a cooperative-owned digital service marketplace platform that enables Labour Cooperative Federations and Labour Cooperative Societies to provide verified household and community services while ensuring fair wages, worker welfare, and consumer trust.
+• Expected Solution Features
+• Service provider registration and verification
+• Worker skill profiling and certification
+• Customer booking and scheduling system
+• Geo-location based service matching
+• Digital payments and invoicing
+• Rating and feedback mechanism
+• Worker welfare and insurance integration
+• Emergency and on-demand service booking
+• Cooperative federation administration dashboard
+• Multilingual mobile application
+• AI-based demand forecasting and workforce allocation
+• Technology Components
+• Mobile Applications
+• Artificial Intelligence (AI)
+• Geo-Spatial Technology
+• Digital Payment Systems
+• Cloud Computing
+• Proposed Mode Software
+
+
+Problem Statement ID	
+26089
+Problem Statement Title	
+Cooperative Gig Services Platform for Household & Community Services
+Description	
+• Background Labour Cooperative Federations and Labour Cooperative Societies possess a large pool of skilled workers such as electricians, plumbers, carpenters, painters, domestic helpers, caregivers, drivers, gardeners,cleaners, and technicians. However, they lack a structured digital platform to connect these workers with households and institutions requiring such services.Private platforms currently dominate this market, while cooperative workers often remain underutilized despite having skills and local presence.
+• Problem Statement To develop a cooperative-owned digital service marketplace platform that enables Labour Cooperative Federations and Labour Cooperative Societies to provide verified household and community services while ensuring fair wages, worker welfare, and consumer trust.
+• Expected Solution Features
+• Service provider registration and verification
+• Worker skill profiling and certification
+• Customer booking and scheduling system
+• Geo-location based service matching
+• Digital payments and invoicing
+• Rating and feedback mechanism
+• Worker welfare and insurance integration
+• Emergency and on-demand service booking
+• Cooperative federation administration dashboard
+• Multilingual mobile application
+• AI-based demand forecasting and workforce allocation
+• Technology Components
+• Mobile Applications
+• Artificial Intelligence (AI)
+• Geo-Spatial Technology
+• Digital Payment Systems
+• Cloud Computing
+• Proposed Mode Software
+Organization :Ministry of Cooperation
+Department :National Council for Cooperative Training (NCCT)
+Category :Software
+Theme :Agriculture, FoodTech & Rural Development
+
+
+i have created the user app
+you want to create worker app and organized portal
+(visual theme of the app and portal is: Vibrant Professional Design Prompt
+Visual Style & Personality:
+
+"A 'Vibrant Professional' UI that balances modern energy with executive clarity. The aesthetic is clean, airy, and high-contrast, utilizing a multi-color highlighting system to differentiate data categories while maintaining a unified, approachable brand feel."
+
+Core Design Tokens:
+
+Palette: Crisp white surfaces (#FFFFFF) with soft background elevations (#F7F9FB). Primary actions use a Vibrant Blue (#2563EB), while status-driven highlights include Success Green (#10B981) for earnings/metrics and Warm Amber (#F59E0B) for alerts.
+Typography: Plus Jakarta Sans. Headlines are bold and authoritative; body text uses a medium weight with generous leading for high legibility across all age groups.
+Shape & Elevation: 8px corner radius on all cards and buttons. Soft, diffuse shadows provide depth without visual clutter.
+Components: Rounded-edge cards with subtle borders, high-contrast action buttons, and a clean bottom navigation bar with clear icon-plus-label indicators.
+Application Strategy:
+
+"Use color-coded status cards for instant scannability. Apply the primary blue for navigation and primary CTAs, but pivot to the green and amber accents for performance metrics and time-sensitive tasks to ensure the dashboard feels dynamic and functional.")and also use theme use "D:\All Testing Programs\sih\stitch_professional_service_dashboard" from the folder 
+
+i want extra feature in login of worker
+login->mobile->name->ekyc->if: certified ->upload files; else: pratical assement token number want to be generated and assement assigned by Organizer web page data of all working want to be save in Organizer web page it is the super admin portal to verify all the worker from there.
+
+these are the example you want to do
+Welcome, Arun 👋
+
+Application: WRK-1042
+
+────────────────────
+
+Verification Status
+
+✓ Application Submitted
+⏳ Cooperative Verification
+○ Account Activation
+
+Status:
+"Your application is being reviewed."
+
+[ View Application ]
+PRACTICAL ASSESSMENT
+
+Worker: Ravi Kumar
+
+Safety Practices          ✓ Pass
+Wire Identification       ✓ Pass
+Switch Installation       ✓ Pass
+Circuit Testing           ✓ Pass
+Fault Diagnosis           ✓ Pass
+Tool Handling             ✓ Pass
+
+Safety violation          None
+
+Overall Score: 86 / 100
+
+        [ PASS ]   [ FAIL ]
+PRACTICAL ASSESSMENT
+
+Worker: Ravi Kumar
+
+Safety Practices          ✓ Pass
+Pipe & Fitting Knowledge  ✓ Pass
+Pipe Jointing             ✓ Pass
+Tap Installation          ✓ Pass
+Leakage Detection         ✓ Pass
+Drainage Handling         ✓ Pass
+Tool Handling             ✓ Pass
+
+Safety violation          None
+
+Overall Score: 88 / 100
+
+        [ PASS ]   [ FAIL ]
+PRACTICAL ASSESSMENT
+
+Worker: Ravi Kumar
+
+Hygiene Practices         ✓ Pass
+Cleaning Procedure        ✓ Pass
+Bathroom Cleaning         ✓ Pass
+Floor Cleaning            ✓ Pass
+Chemical Handling         ✓ Pass
+Waste Handling            ✓ Pass
+Equipment Handling        ✓ Pass
+
+Safety violation          None
+
+Overall Score: 91 / 100
+
+        [ PASS ]   [ FAIL ]
+ PRACTICAL ASSESSMENT
+
+Worker: Ravi Kumar
+
+Safety Practices          ✓ Pass
+Cleaning Technique        ✓ Pass
+Surface Handling          ✓ Pass
+Chemical Handling         ✓ Pass
+Sanitization              ✓ Pass
+Waste Segregation         ✓ Pass
+Equipment Handling        ✓ Pass
+
+Safety violation          None
+
+Overall Score: 89 / 100
+
+        [ PASS ]   [ FAIL ]
+PRACTICAL ASSESSMENT
+
+Worker: Ravi Kumar
+
+Safety Practices          ✓ Pass
+Plant Identification      ✓ Pass
+Planting Technique        ✓ Pass
+Pruning                   ✓ Pass
+Soil Preparation          ✓ Pass
+Watering Practices        ✓ Pass
+Tool Handling             ✓ Pass
+
+Safety violation          None
+
+Overall Score: 87 / 100
+
+        [ PASS ]   [ FAIL ]
+PRACTICAL ASSESSMENT
+
+Worker: Ravi Kumar
+
+Safety Practices          ✓ Pass
+Measurement               ✓ Pass
+Wood Cutting              ✓ Pass
+Drilling                  ✓ Pass
+Joint Making              ✓ Pass
+Furniture Repair          ✓ Pass
+Tool Handling             ✓ Pass
+
+Safety violation          None
+
+Overall Score: 90 / 100
+
+        [ PASS ]   [ FAIL ]
+PRACTICAL ASSESSMENT
+
+Worker: Ravi Kumar
+
+Safety Awareness          ✓ Pass
+Basic Maintenance         ✓ Pass
+Problem Identification    ✓ Pass
+Basic Troubleshooting     ✓ Pass
+Emergency Response        ✓ Pass
+Equipment Handling        ✓ Pass
+Issue Reporting           ✓ Pass
+
+Safety violation          None
+
+Overall Score: 85 / 100
+
+        [ PASS ]   [ FAIL ]
+DRIVER VERIFICATION
+
+Worker: Ravi Kumar
+
+Driving Licence           ✓ Verified
+Licence Validity          ✓ Valid
+Vehicle Class             ✓ LMV
+Driving Experience        ✓ 6 Years
+Vehicle Documents         ✓ Verified
+Experience Details        ✓ Verified
+
+Verification Issues       None
+
+Verification Status: VERIFIED
+
+        [ APPROVE ]   [ REJECT ]
+
+need some features like 
+Worker registration, Wallet, insurance, welfare, skill verification(organiser),live gps tracking use google android map ,
+Demand Heatmap
+Shows areas with high demand for particular services
+Useful for workers and organizers
+
+workers ilke  :Plumber, electrician, carpenter, painter, cleaner, domestic helper, driver, gardener, technician
+
+the word “wallet” for a moment. Think of welfare as a small support fund for the workers, managed by the cooperative.
+
+Who gives the money?
+
+Customer → pays for service
+
+Suppose the service costs ₹500.
+
+Your cooperative can decide that a small fixed amount, say ₹20, from each completed service goes toward the Worker Welfare Fund.
+
+So:
+
+Customer pays ₹500
+→ Worker earns ₹450
+→ ₹20 → Worker Welfare Fund
+→ ₹30 → other cooperative/platform charges
+
+The exact amounts are just an example—you would decide the actual revenue-sharing rule with the cooperative.
+
+Where does that ₹20 go?
+
+It goes into a fund managed by the cooperative/federation.
+
+For example:
+
+Worker Welfare Fund = ₹50,000
+
+This money is not individually given to the worker after every job.
+
+Instead, it can be used according to cooperative rules for things such as:
+
+emergency financial assistance
+worker insurance support
+training/upskilling
+safety equipment
+other worker welfare benefits
+Then where does the worker see it?
+
+In the worker app, have a separate:
+
+Welfare
+
+For example:
+
+My Welfare Contributions
+₹20 — today's job
+₹180 — this month
+₹2,400 — total contributed
+
+And perhaps:
+
+Benefits
+
+Insurance: Active ✅
+Training support: Eligible ✅
+
+So the worker can see their contribution and eligible benefits, but they don't simply withdraw the welfare amount like normal earnings.
+
+Very important distinction
+
+Worker Wallet = YOUR MONEY
+
+Money you earned from jobs.
+
+Welfare Fund = WORKER SUPPORT MONEY
+
+Money pooled by the cooperative to provide welfare/benefits to workers.
+
+So the flow is:
+
+Customer → Service payment → Cooperative allocates a predefined amount → Welfare Fund → Worker benefits
+
+That is the cleanest way to explain it to an SIH judge. Your current PPT mentions worker welfare/insurance in the problem context, but it does not define this exact fund mechanism, so present it as your proposed feature, not as an existing requirement.
+
+
+Below is the full explanation of every important **customer/user app feature**—what it does, why it matters, and how it handles real situations.
+
+## 1. Language, login, and accessibility
+
+### Language selection
+
+The user chooses English, Hindi, or a regional language before using the app. Every screen, service category, booking step, and notification appears in that language.
+
+Why it matters: many household-service customers, especially elderly users, may not be comfortable with English-only apps.
+
+### OTP login
+
+The customer logs in with their phone number and an OTP. This creates a verified booking identity without requiring a complicated password.
+
+Fallbacks:
+
+- Resend OTP if it expires.
+- Voice-call OTP if SMS is delayed.
+- Allow browsing as guest, but require login before payment or booking.
+
+### Voice-guided and accessibility mode
+
+The app can read important steps aloud, offer large text, high-contrast colours, and big buttons.
+
+Why it matters: it makes the app usable by elderly users, users with low literacy, and people with visual difficulty.
+
+---
+
+## 2. Home screen and service discovery
+
+### Location selection
+
+The home screen shows the current area/address. The user can allow GPS access or enter an address manually.
+
+Why it matters: worker matching depends on location.
+
+Fallback: if GPS is unavailable, the user enters city, locality, landmark, and house number manually.
+
+### Service-category grid
+
+The app shows simple service cards:
+
+- Plumber
+- Electrician
+- Cleaner
+- Carpenter
+- Painter
+- Caregiver
+- Gardener
+- Driver
+- Appliance technician
+
+The user should not need to search through long menus.
+
+### Search bar
+
+Customers can search for a service directly, such as “fan repair,” “bathroom cleaning,” or “elder care.”
+
+### Smart Service Assistant
+
+Instead of requiring the user to know the correct category, they can type or speak their issue.
+
+Examples:
+
+- “My tap is leaking” → Plumber
+- “The socket is sparking” → Electrical Emergency
+- “Need house cleaning tomorrow” → Cleaner
+- “My father needs assistance” → Caregiver
+
+For the hackathon, this can work using simple keyword matching. In the future, AI can classify the issue more accurately.
+
+|
+
+## 3. Service details and price transparency
+
+### Service details screen
+
+Before booking, the customer sees:
+
+- Service description
+- What is included
+- Estimated duration
+- Starting price
+- Typical service steps
+- Ratings and reviews
+- Safety note, if required
+
+Example: an electrical service page may say, “Do not touch exposed wires. Switch off the main supply if safe to do so.”
+
+### Estimated price
+
+The app shows an estimated price range before the customer confirms.
+
+Example:
+
+> Inspection ₹99 + repair charges based on work required.
+
+Why it matters: price transparency reduces disputes and builds trust.
+
+### Cooperative trust information
+
+The page explains that workers are verified through Labour Cooperative Societies, not random unverified freelancers.
+
+This is one of your key differences from normal gig platforms.
+
+---
+
+## 4. Booking feature
+
+### Book now
+
+The customer requests the nearest available worker immediately.
+
+Best for normal or urgent requirements.
+
+### Schedule for later
+
+The customer chooses a future date and time.
+
+Example: “Book a cleaner this Sunday at 10 AM.”
+
+This helps the platform balance worker availability and reduces failed bookings.
+
+### Emergency booking
+
+A separate emergency flow is used for urgent cases:
+
+- Water leakage
+- Electrical fault
+- Appliance breakdown
+- Elder-care need
+- Lock/carpentry issue
+
+The app prioritises urgent matching and informs the cooperative organiser if no worker is quickly available.
+
+### Address and landmark
+
+The customer provides house number, street, locality, landmark, and map pin.
+
+Why it matters: Indian addresses can be difficult to locate precisely, so landmarks are useful.
+
+### Issue description and photo upload
+
+The customer can describe the problem and upload a photo.
+
+Example: uploading a photo of a broken tap helps the plumber bring the right tools.
+
+### Multiple-worker request acceptance
+
+The customer can request more than one worker.
+
+Example: an apartment association may request five cleaners for a community-cleaning drive.
+
+### Service bundle
+
+The user can create one booking for multiple related tasks.
+
+Example: “Plumbing + electrical inspection” for a house before moving in.
+
+---
+
+## 5. Worker matching
+
+### Nearby verified-worker matching
+
+After booking, the system finds an appropriate worker based on:
+
+- Location
+- Skill
+- Availability
+- Service category
+- Emergency level
+- Rating
+- Fair-work allocation
+
+### Worker Trust Card
+
+Before confirming, the customer sees:
+
+- Worker name and photo
+- Service skill
+- Experience
+- Rating
+- Completed jobs
+- Distance and estimated arrival time
+- Cooperative name
+- KYC verification
+- Skill certificate
+- Welfare/insurance coverage
+
+This reassures the customer that the worker is reliable and officially connected to a cooperative.
+
+### Why this worker was matched
+
+The app should explain the match in simple language:
+
+> “Matched because the worker is nearby, verified for plumbing, currently available, and has a strong service record.”
+
+This makes the matching system transparent.
+
+### Fair-work allocation
+
+The app should not always assign every job to the highest-rated worker. The system balances jobs across qualified cooperative workers.
+
+Why it matters: it protects worker income and prevents less digitally visible workers from being excluded.
+
+The customer only sees a simple message; the fairness logic happens in the backend.
+
+---
+
+## 6. No-worker available feature
+
+This is very important. The app should never simply say “Service unavailable” and end the journey.
+
+### Expand search radius
+
+If no worker is found within 3 km, the app searches farther away.
+
+### Partner-cooperative search
+
+If the local cooperative has no available worker, the platform searches workers from another cooperative in the federation network.
+
+This is a major advantage of a cooperative federation model.
+
+### Earliest available appointment
+
+If no immediate worker exists, the user sees the next available slot.
+
+Example:
+
+> “All nearby electricians are currently busy. Earliest verified worker: today at 5:30 PM.”
+
+### Priority waitlist
+
+The user can join a priority queue and receive a notification if a worker becomes available.
+
+### Organiser intervention
+
+For emergencies, the app sends the request to the cooperative organiser dashboard. The organiser can manually assign a worker or contact another cooperative.
+
+### Replacement worker
+
+If an accepted worker cancels, is heavily delayed, or does not arrive, the system begins reassignment automatically.
+
+This turns a failed match into a managed recovery process.
+
+---
+
+## 7. Live tracking and job management
+
+### Booking-status timeline
+
+The customer sees the complete status:
+
+1. Booking confirmed  
+2. Worker assigned  
+3. Worker is on the way  
+4. Worker arrived  
+5. Work started  
+6. Work completed  
+
+This removes uncertainty and reduces unnecessary customer calls.
+
+### Live location and ETA
+
+During travel, the user can see the worker’s estimated arrival time and map location.
+
+For the hackathon, a mock moving map or status update is enough.
+
+### Masked contact
+
+The customer can call or chat with the worker without exposing personal phone numbers permanently.
+
+### Start-work OTP
+
+When the worker arrives, the customer gives a one-time OTP to begin the work.
+
+Why it matters: it confirms the right worker has reached the correct customer.
+
+### Extra-work approval
+
+Sometimes a small repair becomes a larger job. The worker submits a revised cost with explanation and photo evidence.
+
+The customer must approve it before the additional work begins.
+
+This prevents surprise charges.
+
+### Completion OTP
+
+After the work is done, the customer confirms completion using another OTP.
+
+This protects both sides: the worker has proof of completed work, and the customer cannot be charged before service completion.
+
+---
+
+## 8. Emergency and safety features
+
+### Emergency Help button
+
+This should be highly visible on the home screen.
+
+It is for urgent but non-police/non-medical situations such as a major water leak, electrical fault, appliance failure, or urgent elder-care support.
+
+### Safety guidance
+
+Before a worker arrives, the app shows simple safety instructions.
+
+Example:
+
+> “For an electrical fault, do not touch exposed wires. Switch off the main power only if it is safe.”
+
+
+
+---
+
+## 9. Payment and fair-wage transparency
+
+### Payment methods
+
+The app supports:
+
+- UPI
+- Card
+- Wallet
+- Cash after service
+
+For the hackathon prototype, UPI can be simulated as a successful payment screen.
+
+### Fair Payment Breakdown
+
+After payment, the customer sees exactly where the money goes.
+
+Example for ₹500:
+
+- ₹400 — worker wage
+- ₹50 — worker welfare and insurance fund
+- ₹30 — cooperative operations
+- ₹20 — platform maintenance
+
+This is a major SIH feature because it proves the platform is cooperative-first, not commission-first.
+
+### Digital invoice
+
+The user receives an invoice containing:
+
+- Booking ID
+- Customer name
+- Worker name
+- Cooperative name
+- Service details
+- Date and time
+- Payment method
+- Total amount
+- Fair-payment breakup
+
+### Cash confirmation
+
+If the customer pays cash, both customer and worker confirm the amount in the app to avoid future disputes.
+
+### Payment failure handling
+
+If payment fails or remains pending:
+
+- Do not create a duplicate charge.
+- Allow retry or another payment method.
+- Create a payment-verification ticket if money was deducted but not reflected.
+
+---
+
+## 10. Rating, warranty, and complaints
+
+### Rating and review
+
+After service completion, the user can give:
+
+- 1–5-star rating
+- Written review
+- Quick feedback tags:
+  - On time
+  - Skilled
+  - Professional
+  - Respectful
+  - Fair pricing
+
+### Rebook worker
+
+The customer can book the same preferred worker for future jobs if they are available.
+
+### Service warranty
+
+For selected services, the app offers a warranty period.
+
+Example:
+
+> “Plumbing repair covered for 7 days.”
+
+If the same issue returns within the warranty period, the user requests a free revisit or cooperative review.
+
+### Complaint portal
+
+The user can report:
+
+- Worker did not arrive
+- Worker was late
+- Wrong worker arrived
+- Poor service quality
+- Overcharging
+- Payment issue
+- Safety concern
+
+They can upload photo/video evidence and track complaint status.
+
+### Cooperative mediation
+
+Unlike a standard marketplace, the cooperative organiser acts as a mediator. The app shows complaint progress:
+
+1. Complaint received  
+2. Under cooperative review  
+3. Worker/customer contacted  
+4. Resolution offered  
+5. Closed  
+
+---
+
+## 11. Notifications and support
+
+### Notification centre
+
+The customer receives notifications for:
+
+- Booking confirmation
+- Worker assignment
+- Worker arrival
+- Delay or cancellation
+- OTP reminders
+- Payment receipt
+- Complaint updates
+- Warranty expiry
+- Recurring booking reminders
+
+### SMS fallback
+
+If push notifications are disabled, important booking updates are sent by SMS.
+
+### Help centre
+
+The customer can access FAQs, support chat, a callback request, and escalation options.
+
+---
+
+## 13. Offline, privacy, and account settings
+
+### Offline support
+
+The active booking is saved on the phone, even if the network drops.
+
+The app shows:
+
+> “Last synced 4 minutes ago.”
+
+It caches:
+
+- Booking details
+- Worker name
+- OTP
+- Emergency support contact
+- Last known status
+
+### Low-data mode
+
+The app can reduce map animation and large images for weak networks.
+
+### Privacy
+
+The customer’s exact address is shown only to the assigned worker. Phone numbers are masked until necessary.
+
+### Settings
+
+The user can manage:
+
+- Language
+- Notification preference
+- Accessibility mode
+- Saved addresses
+- Family members
+- Payment history
+- Logout
+- Account deletion request
+
+---
+
+## The one unique feature: Seva Suraksha Guarantee
+
+This is the strongest feature to present to judges.
+
+It is a single “service recovery” system that handles almost every major booking problem.
+
+If something goes wrong, the customer does not get stuck. The app provides the next best action:
+
+| Problem | Seva Suraksha response |
+|---|---|
+| No worker available | Search partner cooperative / schedule earliest slot / waitlist |
+| Worker cancels | Automatic replacement search |
+| Worker is late | Revised ETA / replacement request |
+| Wrong person arrives | Do not share OTP / report identity mismatch |
+| Work cost increases | Customer approval required before extra work |
+| Payment fails | Retry / verification / support ticket |
+| Work quality is poor | Warranty revisit / complaint |
+| Customer feels unsafe | Emergency cooperative support |
+| Worker no-show | Priority reassignment / organiser escalation |
+
+Your strongest pitch line is:
+
+> “Uniserve Worker is not only a booking app. It is a cooperative-backed service-assurance platform. Every failed or risky situation has a transparent recovery path for the customer, while keeping workers accountable and protected.”
+
+For the hackathon demo, make the following screens functional first: **Home, service selection, booking, worker match, no-worker fallback, live tracking, payment split, rating, and Seva Suraksha complaint/warranty screen.**
+
+and track the disadvantages and fix using suitable solution and create a txt about all steps taken
+
+add separate topic disadvantages and how you solved the problem. take all real time problems and solve it
+

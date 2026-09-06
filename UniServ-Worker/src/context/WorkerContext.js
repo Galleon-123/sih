@@ -7,6 +7,36 @@ import { getTranslation } from '../i18n/translations';
 
 const WorkerContext = createContext();
 
+// ── Simulation / Demo mode ────────────────────────────────────
+const SIM_WORKER = {
+  uid: 'demo-worker-001',
+  phone: '9811223344',
+  name: 'Ravi Kumar',
+  trade: 'electrician',
+  experience: '5 years',
+  cooperative: 'Delhi Electrical Workers Co-op',
+  kycStatus: 'verified',
+  assessmentStatus: 'passed',
+  assessmentToken: 'DEMO-TOK',
+  isCertified: true,
+  status: 'active',
+  isAvailable: true,
+  isOnline: false,
+  verificationStatus: 'verified',
+  rating: 4.7,
+  jobsCompleted: 142,
+  language: 'en',
+  registrationStep: 'completed',
+  earnings: { today: 450, thisMonth: 8200, total: 94500 },
+  welfare: { thisMonth: 600, total: 7200 },
+  insurance: { status: 'active', validUntil: '2027-03-31', policyNo: 'UWCI-2026-08871' },
+  certificates: [],
+  aadhaarNumber: '****-****-1234',
+  aadhaarFront: null,
+  aadhaarBack: null,
+  selfie: null,
+};
+
 export const WorkerProvider = ({ children }) => {
   const [worker, setWorker]               = useState(null);
   const [language, setLanguageState]      = useState('en');
@@ -15,20 +45,34 @@ export const WorkerProvider = ({ children }) => {
   const [registrationStep, setRegistrationStep] = useState('language');
 
   const t = (key, fallback) => {
-    const val = getTranslation(language || 'en', key, fallback);
+    const activeLang = language || worker?.language || 'en';
+    const val = getTranslation(activeLang, key, fallback);
     return (val !== undefined && val !== null && val !== '') ? val : (fallback ?? '');
   };
 
   useEffect(() => {
-    AsyncStorage.getItem('@worker_language').then((l) => { if (l) setLanguageState(l); }).catch(() => {});
+    AsyncStorage.getItem('@worker_language')
+      .then((l) => {
+        if (l) {
+          setLanguageState(l);
+          setWorker((prev) => (prev ? { ...prev, language: l } : prev));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // ── Auth observer ────────────────────────────────────────────
+  const simModeRef = React.useRef(false);
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (simModeRef.current) return; // sim mode active — ignore Firebase
       if (firebaseUser) {
         const profile = await _loadOrCreate(firebaseUser.uid, firebaseUser.phoneNumber);
         setWorker(profile);
+        if (profile?.language) {
+          setLanguageState(profile.language);
+          AsyncStorage.setItem('@worker_language', profile.language).catch(() => {});
+        }
         setIsLoggedIn(true);
         if (profile?.registrationStep) setRegistrationStep(profile.registrationStep);
       } else {
@@ -80,21 +124,26 @@ export const WorkerProvider = ({ children }) => {
 
   const updateWorker = async (fields) => {
     const uid = auth.currentUser?.uid;
-    if (!uid) return;
     if (fields.language) {
       setLanguageState(fields.language);
       AsyncStorage.setItem('@worker_language', fields.language).catch(() => {});
     }
     setWorker((prev) => ({ ...prev, ...fields }));
+    if (!uid) return;
     await setDoc(doc(db, 'workers', uid), { ...fields, updatedAt: serverTimestamp() }, { merge: true })
       .catch((e) => console.warn('Worker update failed:', e));
   };
 
   const setLanguage = async (newLang) => {
-    const code = typeof newLang === 'object' ? newLang.code : newLang;
+    const code = typeof newLang === 'object' ? newLang?.code : (newLang || 'en');
     setLanguageState(code);
     AsyncStorage.setItem('@worker_language', code).catch(() => {});
-    await updateWorker({ language: code });
+    setWorker((prev) => (prev ? { ...prev, language: code } : prev));
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+      await setDoc(doc(db, 'workers', uid), { language: code, updatedAt: serverTimestamp() }, { merge: true })
+        .catch((e) => console.warn('Worker update failed:', e));
+    }
   };
 
   const setStep = (step) => {
@@ -110,16 +159,29 @@ export const WorkerProvider = ({ children }) => {
     setIsLoggedIn(false);
     setRegistrationStep('language');
     setLanguageState('en');
+    AsyncStorage.removeItem('@worker_language').catch(() => {});
   };
 
   const getAssessmentToken = () => worker?.assessmentToken || null;
+
+  // ── Demo / simulation login — no Firebase calls ───────────────
+  const loginAsDemo = (overrideLang) => {
+    simModeRef.current = true;
+    const activeLang = overrideLang || language || 'en';
+    setLanguageState(activeLang);
+    AsyncStorage.setItem('@worker_language', activeLang).catch(() => {});
+    setWorker({ ...SIM_WORKER, language: activeLang });
+    setIsLoggedIn(true);
+    setRegistrationStep('completed');
+    setIsLoading(false);
+  };
 
   return (
     <WorkerContext.Provider value={{
       worker, language, t, setLanguage,
       isLoggedIn, isLoading, registrationStep,
       login, updateWorker, setStep, toggleOnline, logout,
-      getAssessmentToken,
+      getAssessmentToken, loginAsDemo,
     }}>
       {children}
     </WorkerContext.Provider>
