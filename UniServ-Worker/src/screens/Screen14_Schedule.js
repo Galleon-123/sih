@@ -7,6 +7,39 @@ import { colors } from '../theme/colors';
 import { useWorker } from '../context/WorkerContext';
 import { MOCK_UPCOMING_BOOKINGS } from '../data/mockJobs';
 
+const generateWeekDates = () => {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const result = [];
+  const today = new Date();
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const dayName = days[d.getDay()];
+    const dateNum = d.getDate();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(dateNum).padStart(2, '0');
+    const fullDate = `${yyyy}-${mm}-${dd}`;
+    result.push({
+      dayName,
+      date: dateNum,
+      fullDate,
+      isToday: i === 0,
+    });
+  }
+  return result;
+};
+
+const safeFormatDate = (dateStr) => {
+  if (!dateStr) return { day: '1', month: 'Jan' };
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return { day: '1', month: 'Jan' };
+  return {
+    day: d.getDate(),
+    month: d.toLocaleDateString('en-IN', { month: 'short' }),
+  };
+};
+
 export const Screen14_Schedule = () => {
   const { t } = useWorker();
   const SLOTS = [
@@ -110,9 +143,9 @@ export const Screen14_Schedule = () => {
         {MOCK_UPCOMING_BOOKINGS.map((booking) => (
           <View key={booking.id} style={styles.bookingCard}>
             <View style={styles.bookingDateBadge}>
-              <Text style={styles.bookingDateText}>{new Date(booking.date).getDate()}</Text>
+              <Text style={styles.bookingDateText}>{safeFormatDate(booking.date).day}</Text>
               <Text style={styles.bookingMonthText}>
-                {new Date(booking.date).toLocaleDateString('en-IN', { month: 'short' })}
+                {safeFormatDate(booking.date).month}
               </Text>
             </View>
             <View style={{ flex: 1, marginLeft: 14 }}>
