@@ -138,19 +138,22 @@ const styles = StyleSheet.create({
     marginRight: 12
   },
   profileInfo: {
-    flex: 1
+    flex: 1,
+    flexShrink: 1
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 8,
     marginBottom: 2
   },
   name: {
     fontSize: 16,
     fontWeight: '800',
     color: colors.textPrimary,
-    flex: 1
+    flex: 1,
+    flexShrink: 1
   },
   ratingBadge: {
     flexDirection: 'row',
@@ -158,7 +161,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.warningLight,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 6
+    borderRadius: 6,
+    flexShrink: 0
   },
   ratingText: {
     fontSize: 12,
@@ -174,13 +178,15 @@ const styles = StyleSheet.create({
   skillExp: {
     fontSize: 13,
     color: colors.textSecondary,
-    fontWeight: '500'
+    fontWeight: '500',
+    flexShrink: 1
   },
   cooperative: {
     fontSize: 11,
     color: colors.primary,
     fontWeight: '600',
-    marginTop: 2
+    marginTop: 2,
+    flexShrink: 1
   },
   badgesRow: {
     flexDirection: 'row',

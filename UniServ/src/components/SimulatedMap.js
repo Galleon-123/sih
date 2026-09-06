@@ -4,51 +4,100 @@ import {
   Text,
   StyleSheet,
   Animated,
-  Dimensions,
-  TouchableOpacity
+  TouchableOpacity,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 
-const { width } = Dimensions.get('window');
-
 export const SimulatedMap = ({
   worker,
+  workerName,
   userAddress,
   onArrival,
-  durationMs = 15000,
-  autoStart = true
+  durationMs,
+  durationSeconds,
+  autoStart = true,
+  mode = 'tracking', // 'tracking' | 'preview' | 'worker_accept'
+  showWorkerAcceptControls = false,
+  onAcceptJob,
+  onDeclineJob,
+  jobEarnings = 280
 }) => {
+  // Normalize duration
+  const effectiveDurationMs = durationMs || (durationSeconds ? durationSeconds * 1000 : 12000);
+
+  // Normalize worker object
+  const normalizedWorker = worker || {
+    name: workerName || 'Cooperative Artisan',
+    skill: 'Verified Artisan',
+    eta_minutes: 8,
+    distance_km: 1.2,
+    cooperative: 'District Cooperative Federation'
+  };
+
+  const [mapWidth, setMapWidth] = useState(360);
+  const [mapHeight, setMapHeight] = useState(240);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [mapLayer, setMapLayer] = useState('street'); // 'street' | 'satellite'
+
   const progressAnim = useRef(new Animated.Value(0)).current;
-  const [eta, setEta] = useState(worker?.eta_minutes || 10);
-  const [distance, setDistance] = useState(worker?.distance_km || 1.2);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  const [eta, setEta] = useState(normalizedWorker?.eta_minutes || 8);
+  const [distance, setDistance] = useState(normalizedWorker?.distance_km || 1.2);
   const [hasArrived, setHasArrived] = useState(false);
-  const [currentTurn, setCurrentTurn] = useState('Departed from South Delhi Cooperative Hub');
+  const [currentTurn, setCurrentTurn] = useState('Departed from Cooperative Staging Depot');
   const [speed, setSpeed] = useState('28 km/h');
+  const [isPaused, setIsPaused] = useState(false);
 
   const TURN_BY_TURN_STEPS = [
-    { at: 0.0, turn: 'Departed from Lajpat Nagar Cooperative Hub', speed: '24 km/h' },
+    { at: 0.0, turn: 'Departed from Lajpat Nagar Cooperative Depot', speed: '24 km/h' },
     { at: 0.25, turn: 'Turning right towards Ring Road Flyover', speed: '32 km/h' },
     { at: 0.55, turn: 'Crossing Metro Station Pillar 42', speed: '28 km/h' },
-    { at: 0.85, turn: 'Entering Block B Gate • Approaching Street', speed: '16 km/h' },
+    { at: 0.82, turn: 'Entering Customer Sector • Approaching Gate', speed: '16 km/h' },
     { at: 1.0, turn: 'Arrived at your doorstep! 🎉', speed: '0 km/h' }
   ];
 
+  // Radar Pulse Animation
   useEffect(() => {
-    if (!autoStart) return;
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.4,
+          duration: 1200,
+          useNativeDriver: Platform.OS !== 'web'
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1200,
+          useNativeDriver: Platform.OS !== 'web'
+        })
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, []);
+
+  // Moving Vehicle Animation
+  useEffect(() => {
+    if (!autoStart || mode === 'preview') {
+      progressAnim.setValue(0.15); // Staging preview
+      return;
+    }
 
     progressAnim.setValue(0);
     setHasArrived(false);
 
     const animation = Animated.timing(progressAnim, {
       toValue: 1,
-      duration: durationMs,
+      duration: effectiveDurationMs,
       useNativeDriver: false
     });
 
     const listenerId = progressAnim.addListener(({ value }) => {
-      const initialDist = worker?.distance_km || 1.2;
-      const initialEta = worker?.eta_minutes || 10;
+      const initialDist = normalizedWorker?.distance_km || 1.2;
+      const initialEta = normalizedWorker?.eta_minutes || 8;
 
       const currentDist = Math.max(0, initialDist * (1 - value)).toFixed(1);
       const currentEta = Math.max(1, Math.ceil(initialEta * (1 - value)));
@@ -56,7 +105,7 @@ export const SimulatedMap = ({
       setDistance(currentDist);
       setEta(currentEta);
 
-      // Find matching turn-by-turn instruction
+      // Match turn step
       for (let i = TURN_BY_TURN_STEPS.length - 1; i >= 0; i--) {
         if (value >= TURN_BY_TURN_STEPS[i].at) {
           setCurrentTurn(TURN_BY_TURN_STEPS[i].turn);
@@ -80,7 +129,7 @@ export const SimulatedMap = ({
       progressAnim.removeListener(listenerId);
       animation.stop();
     };
-  }, [autoStart]);
+  }, [autoStart, mode, effectiveDurationMs]);
 
   const handleFastForward = () => {
     progressAnim.setValue(1);
@@ -93,66 +142,143 @@ export const SimulatedMap = ({
     }
   };
 
+  const handleResetRoute = () => {
+    progressAnim.setValue(0);
+    setDistance(normalizedWorker?.distance_km || 1.2);
+    setEta(normalizedWorker?.eta_minutes || 8);
+    setHasArrived(false);
+    setCurrentTurn('Departed from Lajpat Nagar Cooperative Depot');
+  };
+
+  // Safe coordinates calculated relative to container layout
+  const maxSafeX = Math.max(120, mapWidth - 65);
+  const maxSafeY = Math.max(120, mapHeight - 55);
+
   const markerX = progressAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [35, width - 85]
+    outputRange: [28, maxSafeX]
   });
 
   const markerY = progressAnim.interpolate({
     inputRange: [0, 0.35, 0.7, 1],
-    outputRange: [40, 130, 95, 175]
+    outputRange: [30, Math.min(110, maxSafeY * 0.55), Math.min(85, maxSafeY * 0.42), maxSafeY]
   });
 
+  const isWorkerAcceptMode = mode === 'worker_accept' || showWorkerAcceptControls;
+
   return (
-    <View style={styles.container}>
-      {/* Rapido/Uber Turn-by-Turn Header Ticker */}
+    <View
+      style={styles.container}
+      onLayout={(e) => {
+        const { width: w, height: h } = e.nativeEvent.layout;
+        if (w > 0) setMapWidth(w);
+        if (h > 0) setMapHeight(h);
+      }}
+    >
+      {/* Turn-by-Turn Navigation Header */}
       <View style={styles.navigationHeader}>
         <View style={styles.navIconBox}>
-          <Ionicons name={hasArrived ? 'flag' : 'navigate'} size={18} color="#FFFFFF" />
+          <Ionicons
+            name={hasArrived ? 'flag' : isWorkerAcceptMode ? 'navigate-circle' : 'navigate'}
+            size={18}
+            color="#FFFFFF"
+          />
         </View>
         <View style={styles.navTextCol}>
           <Text style={styles.turnTitle} numberOfLines={1}>
-            {currentTurn}
+            {isWorkerAcceptMode ? 'WORKER CONVENIENCE ROUTE & DISPATCH RADAR' : currentTurn}
           </Text>
           <View style={styles.navMetaRow}>
-            <Text style={styles.navSpeedText}>Speed: {speed}</Text>
+            <Text style={styles.navSpeedText}>
+              {isWorkerAcceptMode ? 'Pickup to Jobsite Distance' : `Speed: ${speed}`}
+            </Text>
             <Text style={styles.navDot}>•</Text>
-            <Text style={styles.navPlateText}>DL 3S CD 8492</Text>
+            <Text style={styles.navPlateText}>
+              {isWorkerAcceptMode ? `${distance} km away (~${eta} mins)` : 'Service EV DL 3S CD 8492'}
+            </Text>
           </View>
         </View>
+
+        {/* Map Type Toggle */}
+        <TouchableOpacity
+          style={styles.layerToggleBtn}
+          onPress={() => setMapLayer((prev) => (prev === 'street' ? 'satellite' : 'street'))}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={mapLayer === 'street' ? 'map' : 'earth'}
+            size={14}
+            color="#FFFFFF"
+          />
+          <Text style={styles.layerToggleText}>
+            {mapLayer === 'street' ? 'Street' : 'Sat'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Realistic Simulated Map Grid Canvas */}
-      <View style={styles.mapCanvas}>
-        {/* Road Grid lines */}
-        <View style={[styles.roadHorizontal, { top: 50 }]} />
-        <View style={[styles.roadHorizontal, { top: 140 }]} />
-        <View style={[styles.roadHorizontal, { top: 190 }]} />
-        
-        <View style={[styles.roadVertical, { left: '20%' }]} />
-        <View style={[styles.roadVertical, { left: '55%' }]} />
-        <View style={[styles.roadVertical, { left: '80%' }]} />
+      {/* Realistic Interactive Map Canvas */}
+      <View
+        style={[
+          styles.mapCanvas,
+          mapLayer === 'satellite' ? styles.mapCanvasSatellite : styles.mapCanvasStreet
+        ]}
+      >
+        {/* Road Grid Matrix */}
+        <View style={[styles.roadHorizontal, { top: 40 }]} />
+        <View style={[styles.roadHorizontal, { top: 120 }]} />
+        <View style={[styles.roadHorizontal, { top: 180 }]} />
 
-        {/* Sector Labels */}
-        <Text style={[styles.sectorLabel, { top: 15, left: 15 }]}>Main Ring Road</Text>
-        <Text style={[styles.sectorLabel, { top: 100, right: 25 }]}>Metro Station Sector</Text>
-        <Text style={[styles.sectorLabel, { bottom: 15, left: 25 }]}>Lajpat Nagar Block B</Text>
+        <View style={[styles.roadVertical, { left: '18%' }]} />
+        <View style={[styles.roadVertical, { left: '50%' }]} />
+        <View style={[styles.roadVertical, { left: '82%' }]} />
 
-        {/* Active Route Path */}
-        <View style={styles.routePathLine} />
+        {/* Sector Landmark Badges */}
+        <View style={[styles.sectorBadge, { top: 12, left: 12 }]}>
+          <Ionicons name="business-outline" size={10} color="#64748B" />
+          <Text style={styles.sectorLabel}>Ring Road Sector</Text>
+        </View>
+
+        <View style={[styles.sectorBadge, { top: 90, right: 14 }]}>
+          <Ionicons name="subway-outline" size={10} color="#64748B" />
+          <Text style={styles.sectorLabel}>Metro Hub Gate 2</Text>
+        </View>
+
+        <View style={[styles.sectorBadge, { bottom: 12, left: 16 }]}>
+          <Ionicons name="home-outline" size={10} color="#64748B" />
+          <Text style={styles.sectorLabel}>Lajpat Nagar Block B</Text>
+        </View>
+
+        {/* Origin / Cooperative Hub Staging Pin */}
+        <View style={[styles.originPin, { left: 18, top: 22 }]}>
+          <View style={styles.originCircle}>
+            <Ionicons name="business" size={14} color="#FFFFFF" />
+          </View>
+          <View style={styles.pinTag}>
+            <Text style={styles.pinTagText}>Co-op Hub</Text>
+          </View>
+        </View>
 
         {/* Home Destination Pin */}
-        <View style={[styles.destinationPin, { right: 26, bottom: 35 }]}>
-          <View style={styles.radarRing} />
+        <View style={[styles.destinationPin, { right: 20, bottom: 20 }]}>
+          <Animated.View
+            style={[
+              styles.radarPulse,
+              {
+                transform: [{ scale: pulseAnim }]
+              }
+            ]}
+          />
           <View style={styles.homePinCircle}>
             <Ionicons name="home" size={16} color="#FFFFFF" />
           </View>
-          <View style={styles.pinLabel}>
-            <Text style={styles.pinLabelText} numberOfLines={1}>Your Location</Text>
+          <View style={styles.pinTagDestination}>
+            <Text style={styles.pinTagDestText} numberOfLines={1}>
+              {userAddress ? 'Job Location' : 'Your Location'}
+            </Text>
           </View>
         </View>
 
-        {/* Uber/Rapido style Vehicle Marker */}
+        {/* Live Moving Vehicle / Worker GPS Marker */}
         <Animated.View
           style={[
             styles.vehicleMarker,
@@ -162,37 +288,105 @@ export const SimulatedMap = ({
           ]}
         >
           <View style={styles.vehicleCircle}>
-            <Ionicons name="bicycle" size={18} color="#FFFFFF" />
+            <Ionicons
+              name={normalizedWorker?.skill === 'Driver' ? 'car' : 'bicycle'}
+              size={18}
+              color="#FFFFFF"
+            />
           </View>
           <View style={styles.driverTag}>
-            <Text style={styles.driverTagText}>{worker?.name?.split(' ')[0] || 'Artisan'}</Text>
+            <Text style={styles.driverTagText} numberOfLines={1}>
+              {normalizedWorker?.name?.split(' ')[0] || 'Artisan'}
+            </Text>
           </View>
         </Animated.View>
+
+        {/* Zoom Controls Overlay */}
+        <View style={styles.zoomControlBox}>
+          <TouchableOpacity
+            style={styles.zoomBtn}
+            onPress={() => setZoomLevel((z) => Math.min(z + 0.2, 1.6))}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="add" size={14} color={colors.textPrimary} />
+          </TouchableOpacity>
+          <View style={styles.zoomDivider} />
+          <TouchableOpacity
+            style={styles.zoomBtn}
+            onPress={() => setZoomLevel((z) => Math.max(z - 0.2, 0.8))}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="remove" size={14} color={colors.textPrimary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Live Distance & ETA Bottom Bar */}
+      {/* Live Distance & Status Bar */}
       <View style={styles.statusBar}>
         <View style={styles.statusCol}>
           <View style={styles.statusLiveBadge}>
-            <View style={[styles.statusDot, { backgroundColor: hasArrived ? colors.success : colors.warning }]} />
+            <View
+              style={[
+                styles.statusDot,
+                { backgroundColor: hasArrived ? colors.success : colors.warning }
+              ]}
+            />
             <Text style={styles.statusLabel}>
-              {hasArrived ? 'ARTISAN ARRIVED' : 'LIVE GPS TRACKING'}
+              {isWorkerAcceptMode
+                ? 'WORKER DISPATCH RADAR'
+                : hasArrived
+                ? 'ARTISAN ARRIVED'
+                : 'LIVE GPS TRACKING'}
             </Text>
           </View>
           <Text style={styles.statusValue}>
-            {hasArrived ? 'At Your Doorstep' : `${distance} km • ETA ${eta} mins`}
+            {hasArrived
+              ? 'At Customer Doorstep'
+              : `${distance} km • ETA ${eta} mins`}
           </Text>
         </View>
 
-        {!hasArrived && (
-          <TouchableOpacity
-            style={styles.fastForwardBtn}
-            onPress={handleFastForward}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="play-forward" size={14} color={colors.primary} />
-            <Text style={styles.fastForwardText}>Fast Forward</Text>
-          </TouchableOpacity>
+        {/* Controls based on mode */}
+        {isWorkerAcceptMode ? (
+          <View style={styles.workerAcceptBadgeRow}>
+            <View style={styles.payoutChip}>
+              <Text style={styles.payoutChipLabel}>EARNING</Text>
+              <Text style={styles.payoutChipVal}>₹{jobEarnings}</Text>
+            </View>
+            {onAcceptJob && (
+              <TouchableOpacity
+                style={styles.workerAcceptBtn}
+                onPress={onAcceptJob}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="checkmark-circle" size={14} color="#FFFFFF" />
+                <Text style={styles.workerAcceptBtnText}>Accept Job</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : (
+          <View style={styles.statusActionsRow}>
+            {!hasArrived && (
+              <TouchableOpacity
+                style={styles.fastForwardBtn}
+                onPress={handleFastForward}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="play-forward" size={13} color={colors.primary} />
+                <Text style={styles.fastForwardText}>Fast Forward</Text>
+              </TouchableOpacity>
+            )}
+            {hasArrived && (
+              <TouchableOpacity
+                style={styles.resetBtn}
+                onPress={handleResetRoute}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="refresh" size={12} color={colors.textSecondary} />
+                <Text style={styles.resetBtnText}>Replay</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         )}
       </View>
     </View>
@@ -212,25 +406,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.primaryDark,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)'
+    borderBottomColor: 'rgba(255, 255, 255, 0.12)'
   },
   navIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10
+    marginRight: 9
   },
   navTextCol: {
-    flex: 1
+    flex: 1,
+    marginRight: 8
   },
   turnTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
     color: '#FFFFFF'
   },
@@ -254,59 +449,106 @@ const styles = StyleSheet.create({
     color: '#E2E8F0',
     fontWeight: '700'
   },
+  layerToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8
+  },
+  layerToggleText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginLeft: 3
+  },
   mapCanvas: {
-    height: 240,
+    height: 230,
     width: '100%',
-    backgroundColor: '#E8ECF0',
     position: 'relative',
     overflow: 'hidden'
+  },
+  mapCanvasStreet: {
+    backgroundColor: '#E8ECF0'
+  },
+  mapCanvasSatellite: {
+    backgroundColor: '#1E293B'
   },
   roadHorizontal: {
     position: 'absolute',
     left: 0,
     right: 0,
-    height: 18,
+    height: 16,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#D3DAE1'
+    borderColor: '#D1D5DB'
   },
   roadVertical: {
     position: 'absolute',
     top: 0,
     bottom: 0,
-    width: 20,
+    width: 18,
     backgroundColor: '#FFFFFF',
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    borderColor: '#D3DAE1'
+    borderColor: '#D1D5DB'
+  },
+  sectorBadge: {
+    position: 'absolute',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#E2E8F0'
   },
   sectorLabel: {
-    position: 'absolute',
     fontSize: 9,
     fontWeight: '800',
-    color: '#94A3B8',
+    color: '#64748B',
+    marginLeft: 3,
     textTransform: 'uppercase',
-    letterSpacing: 0.5
+    letterSpacing: 0.3
   },
-  routePathLine: {
+  originPin: {
     position: 'absolute',
-    top: 50,
-    left: 45,
-    right: 45,
-    height: 130,
-    borderWidth: 2.5,
-    borderColor: colors.primaryLight,
-    borderStyle: 'dashed',
-    borderRadius: 28,
-    opacity: 0.7
+    alignItems: 'center',
+    zIndex: 10
+  },
+  originCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF'
+  },
+  pinTag: {
+    backgroundColor: colors.surface,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+    marginTop: 2,
+    borderWidth: 1,
+    borderColor: colors.border
+  },
+  pinTagText: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: colors.primary
   },
   destinationPin: {
     position: 'absolute',
     alignItems: 'center',
     zIndex: 10
   },
-  radarRing: {
+  radarPulse: {
     position: 'absolute',
     width: 44,
     height: 44,
@@ -315,28 +557,28 @@ const styles = StyleSheet.create({
     top: -4
   },
   homePinCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: colors.success,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: colors.shadowColor,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
-    shadowRadius: 5,
+    shadowRadius: 4,
     elevation: 4
   },
-  pinLabel: {
+  pinTagDestination: {
     backgroundColor: colors.surface,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
-    marginTop: 4,
+    marginTop: 3,
     borderWidth: 1,
     borderColor: colors.border
   },
-  pinLabelText: {
+  pinTagDestText: {
     fontSize: 9,
     fontWeight: '800',
     color: colors.textPrimary
@@ -349,18 +591,18 @@ const styles = StyleSheet.create({
     zIndex: 20
   },
   vehicleCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#FFFFFF',
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
     elevation: 5
   },
   driverTag: {
@@ -375,18 +617,44 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF'
   },
+  zoomControlBox: {
+    position: 'absolute',
+    right: 12,
+    top: 12,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.shadowColor,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    zIndex: 15
+  },
+  zoomBtn: {
+    width: 26,
+    height: 26,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  zoomDivider: {
+    height: 1,
+    backgroundColor: colors.border
+  },
   statusBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: colors.surface,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderTopWidth: 1,
     borderTopColor: colors.border
   },
   statusCol: {
-    flex: 1
+    flex: 1,
+    marginRight: 8
   },
   statusLiveBadge: {
     flexDirection: 'row',
@@ -394,36 +662,98 @@ const styles = StyleSheet.create({
     marginBottom: 2
   },
   statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    marginRight: 5
   },
   statusLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800',
     color: colors.textSecondary,
     letterSpacing: 0.5
   },
   statusValue: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
     color: colors.textPrimary
+  },
+  statusActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
   },
   fastForwardBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.primarySubtle,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border
   },
   fastForwardText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: colors.primary,
+    marginLeft: 3
+  },
+  resetBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceSecondary,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border
+  },
+  resetBtnText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginLeft: 3
+  },
+  workerAcceptBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  payoutChip: {
+    backgroundColor: colors.successLight,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignItems: 'flex-end'
+  },
+  payoutChipLabel: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: colors.successDark
+  },
+  payoutChipVal: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: colors.successDark
+  },
+  workerAcceptBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.success,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 10,
+    shadowColor: colors.success,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3
+  },
+  workerAcceptBtnText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FFFFFF',
     marginLeft: 4
   }
 });

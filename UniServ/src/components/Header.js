@@ -104,12 +104,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: colors.textPrimary,
-    flex: 1
+    flex: 1,
+    flexShrink: 1
   },
   locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    flexShrink: 1,
     marginRight: 10
   },
   pinCircle: {
@@ -122,7 +124,8 @@ const styles = StyleSheet.create({
     marginRight: 10
   },
   addressTextContainer: {
-    flex: 1
+    flex: 1,
+    flexShrink: 1
   },
   locationLabelRow: {
     flexDirection: 'row',
@@ -137,7 +140,8 @@ const styles = StyleSheet.create({
   addressLine: {
     fontSize: 11,
     color: colors.textSecondary,
-    marginTop: 1
+    marginTop: 1,
+    flexShrink: 1
   },
   rightActions: {
     flexDirection: 'row',

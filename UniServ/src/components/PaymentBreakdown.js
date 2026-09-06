@@ -101,23 +101,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    flexShrink: 1,
     marginRight: 10
   },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginRight: 8
+    marginRight: 8,
+    flexShrink: 0
   },
   legendLabel: {
     fontSize: 12,
     color: colors.textSecondary,
-    fontWeight: '500'
+    fontWeight: '500',
+    flexShrink: 1
   },
   legendAmount: {
     fontSize: 13,
     fontWeight: '700',
-    color: colors.textPrimary
+    color: colors.textPrimary,
+    flexShrink: 0
   }
 });
 

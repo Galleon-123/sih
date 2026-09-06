@@ -14,21 +14,25 @@ import { useBooking } from '../context/BookingContext';
 import { useUser } from '../context/UserContext';
 import Header from '../components/Header';
 import WorkerTrustCard from '../components/WorkerTrustCard';
+import SimulatedMap from '../components/SimulatedMap';
 import workersData from '../data/workers.json';
 
 export const Screen06_WorkerMatch = ({ route, navigation }) => {
   const { service, bookingType } = route.params || {};
-  const { activeBooking, assignWorker } = useBooking();
+  const { activeBooking, assignWorker, totalAmount } = useBooking();
   const { t } = useUser();
 
   const [isSearching, setIsSearching] = useState(true);
   const [workerIndex, setWorkerIndex] = useState(0);
+  const [workerModeActive, setWorkerModeActive] = useState(false);
 
   const matchingWorkers = workersData.filter(
     (w) => !service?.name || w.skill.toLowerCase() === service.name.toLowerCase()
   );
   const pool = matchingWorkers.length > 0 ? matchingWorkers : workersData;
   const currentWorker = pool[workerIndex % pool.length];
+
+  const estimatedWage = Math.round((totalAmount || activeBooking?.total_amount || 350) * 0.8);
 
   useEffect(() => {
     setIsSearching(true);
@@ -57,7 +61,7 @@ export const Screen06_WorkerMatch = ({ route, navigation }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <Header
-        title="Worker Matching"
+        title="Worker Matching &amp; Job Dispatch"
         showBack
         onBack={() => navigation.goBack()}
       />
@@ -116,25 +120,87 @@ export const Screen06_WorkerMatch = ({ route, navigation }) => {
           </View>
         ) : (
           <View>
+            {/* Matched Success Header with Worker Mode Toggle */}
             <View style={styles.matchedSuccessHeader}>
-              <View style={[styles.matchedBadge, activeBooking?.is_bulk_project && { backgroundColor: '#EDE9FE' }]}>
-                <Ionicons
-                  name={activeBooking?.is_bulk_project ? 'people' : 'checkmark-done'}
-                  size={16}
-                  color={activeBooking?.is_bulk_project ? colors.cooperativePurple : colors.successDark}
-                />
-                <Text style={[styles.matchedBadgeText, activeBooking?.is_bulk_project && { color: colors.cooperativePurple }]}>
-                  {activeBooking?.is_bulk_project ? 'MASTER CONTRACTOR & SQUAD READY' : t('optimalMatch')}
-                </Text>
+              <View style={styles.headerTopRow}>
+                <View style={[styles.matchedBadge, activeBooking?.is_bulk_project && { backgroundColor: '#EDE9FE' }]}>
+                  <Ionicons
+                    name={activeBooking?.is_bulk_project ? 'people' : 'checkmark-done'}
+                    size={16}
+                    color={activeBooking?.is_bulk_project ? colors.cooperativePurple : colors.successDark}
+                  />
+                  <Text style={[styles.matchedBadgeText, activeBooking?.is_bulk_project && { color: colors.cooperativePurple }]}>
+                    {activeBooking?.is_bulk_project ? 'MASTER CONTRACTOR & SQUAD READY' : t('optimalMatch')}
+                  </Text>
+                </View>
+
+                {/* Worker View Toggle for convenient route inspection */}
+                <TouchableOpacity
+                  style={[styles.workerToggleBtn, workerModeActive && styles.workerToggleBtnActive]}
+                  onPress={() => setWorkerModeActive(!workerModeActive)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons
+                    name={workerModeActive ? 'construct' : 'person-outline'}
+                    size={13}
+                    color={workerModeActive ? '#FFFFFF' : colors.primary}
+                  />
+                  <Text style={[styles.workerToggleText, workerModeActive && styles.workerToggleTextActive]}>
+                    {workerModeActive ? 'Worker Radar' : 'Worker View'}
+                  </Text>
+                </TouchableOpacity>
               </View>
+
               <Text style={styles.matchedHeading}>
                 {activeBooking?.is_bulk_project ? 'Lead Project Contractor Assigned' : t('verifiedArtisanReady')}
               </Text>
               <Text style={styles.matchedSubtext}>
                 {activeBooking?.is_bulk_project
                   ? `Review lead contractor profile, ${activeBooking?.crew_size} crew artisans, and transparent milestone advance.`
-                  : 'Review artisan profile, credentials, and transparent cooperative rate.'}
+                  : 'Review artisan profile, live staging route, and transparent cooperative rate.'}
               </Text>
+            </View>
+
+            {/* LIVE LOCATION & ROUTE MAP IN JOB ACCEPT SECTION (FOR WORKER CONVENIENCE) */}
+            <View style={styles.mapAcceptSection}>
+              <View style={styles.mapHeaderBanner}>
+                <View style={styles.mapHeaderLeft}>
+                  <Ionicons name="navigate" size={16} color={colors.primary} />
+                  <Text style={styles.mapHeaderTitle}>
+                    {workerModeActive
+                      ? 'ARTISAN DISPATCH & ROUTE ACCEPTANCE RADAR'
+                      : 'LIVE COOPERATIVE ARTISAN ROUTE PREVIEW'}
+                  </Text>
+                </View>
+                <View style={styles.mapEtaBadge}>
+                  <Text style={styles.mapEtaText}>~{currentWorker?.eta_minutes || 8} min away</Text>
+                </View>
+              </View>
+
+              <SimulatedMap
+                worker={currentWorker}
+                userAddress={activeBooking?.address}
+                autoStart={true}
+                mode={workerModeActive ? 'worker_accept' : 'preview'}
+                showWorkerAcceptControls={workerModeActive}
+                jobEarnings={estimatedWage}
+                onAcceptJob={handleConfirmBooking}
+              />
+
+              <View style={styles.mapFooterDetails}>
+                <View style={styles.mapFooterItem}>
+                  <Ionicons name="business" size={14} color={colors.primary} />
+                  <Text style={styles.mapFooterText} numberOfLines={1}>
+                    From: {currentWorker?.cooperative || 'South Delhi Cooperative Depot'}
+                  </Text>
+                </View>
+                <View style={styles.mapFooterItem}>
+                  <Ionicons name="location" size={14} color={colors.successDark} />
+                  <Text style={styles.mapFooterText} numberOfLines={1}>
+                    To: {activeBooking?.address || 'Flat 302, Palm Heights, Lajpat Nagar'}
+                  </Text>
+                </View>
+              </View>
             </View>
 
             {/* Bulk Project Milestone Header Card if Bulk */}
@@ -164,14 +230,18 @@ export const Screen06_WorkerMatch = ({ route, navigation }) => {
               </View>
             )}
 
-            {/* Worker Trust Card */}
+            {/* Worker Trust & Acceptance Card */}
             <WorkerTrustCard
               worker={currentWorker}
               showMatchReason={true}
               showActions={true}
               onConfirm={handleConfirmBooking}
               onFindAnother={pool.length > 1 ? handleFindAnother : null}
-              confirmLabel={activeBooking?.is_bulk_project ? `Confirm Squad & Pay Advance (₹${activeBooking?.advance_amount?.toLocaleString()})` : t('confirmTrack')}
+              confirmLabel={
+                activeBooking?.is_bulk_project
+                  ? `Confirm Squad & Pay Advance (₹${activeBooking?.advance_amount?.toLocaleString()})`
+                  : `Accept Artisan & Start Tracking • ${currentWorker?.eta_minutes || 8} min ETA`
+              }
               findAnotherLabel={t('showNextWorker')}
             />
 
@@ -216,7 +286,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 14,
-    paddingBottom: 30
+    paddingBottom: 36
   },
   noticeBar: {
     flexDirection: 'row',
@@ -225,7 +295,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
-    marginBottom: 16,
+    marginBottom: 14,
     borderWidth: 1,
     borderColor: colors.border
   },
@@ -233,7 +303,9 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: colors.primary,
-    marginLeft: 6
+    marginLeft: 6,
+    flex: 1,
+    flexShrink: 1
   },
   searchingCard: {
     backgroundColor: colors.surface,
@@ -288,10 +360,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: colors.textPrimary,
-    marginLeft: 8
+    marginLeft: 8,
+    flex: 1,
+    flexShrink: 1
   },
   matchedSuccessHeader: {
     marginBottom: 12
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6
   },
   matchedBadge: {
     flexDirection: 'row',
@@ -299,15 +379,36 @@ const styles = StyleSheet.create({
     backgroundColor: colors.successLight,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
-    marginBottom: 6
+    borderRadius: 6
   },
   matchedBadgeText: {
     fontSize: 10,
     fontWeight: '800',
     color: colors.successDark,
     marginLeft: 4
+  },
+  workerToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primarySubtle,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.primaryLight
+  },
+  workerToggleBtnActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary
+  },
+  workerToggleText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.primary,
+    marginLeft: 4
+  },
+  workerToggleTextActive: {
+    color: '#FFFFFF'
   },
   matchedHeading: {
     fontSize: 20,
@@ -317,7 +418,76 @@ const styles = StyleSheet.create({
   matchedSubtext: {
     fontSize: 12,
     color: colors.textSecondary,
-    marginTop: 2
+    marginTop: 2,
+    lineHeight: 16
+  },
+  mapAcceptSection: {
+    marginBottom: 14,
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    shadowColor: colors.shadowColor,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3
+  },
+  mapHeaderBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.primarySubtle,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border
+  },
+  mapHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 8
+  },
+  mapHeaderTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.primary,
+    marginLeft: 6,
+    letterSpacing: 0.4
+  },
+  mapEtaBadge: {
+    backgroundColor: colors.surface,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.border
+  },
+  mapEtaText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.primary
+  },
+  mapFooterDetails: {
+    backgroundColor: colors.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 4,
+    borderTopWidth: 1,
+    borderTopColor: colors.border
+  },
+  mapFooterItem: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  mapFooterText: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginLeft: 6,
+    flex: 1,
+    flexShrink: 1
   },
   guaranteeCard: {
     flexDirection: 'row',
@@ -330,7 +500,8 @@ const styles = StyleSheet.create({
   },
   guaranteeTextCol: {
     marginLeft: 10,
-    flex: 1
+    flex: 1,
+    flexShrink: 1
   },
   guaranteeTitle: {
     fontSize: 13,
@@ -359,7 +530,9 @@ const styles = StyleSheet.create({
   bulkMatchTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: colors.textPrimary
+    color: colors.textPrimary,
+    flex: 1,
+    marginRight: 6
   },
   bulkMatchBadge: {
     backgroundColor: '#EDE9FE',
@@ -387,7 +560,8 @@ const styles = StyleSheet.create({
     marginTop: 10
   },
   bulkMatchMetric: {
-    alignItems: 'center'
+    alignItems: 'center',
+    flex: 1
   },
   bulkMatchKey: {
     fontSize: 9,
@@ -415,7 +589,8 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: colors.textSecondary,
-    marginLeft: 6
+    marginLeft: 6,
+    flexShrink: 1
   }
 });
 

@@ -566,17 +566,21 @@ const styles = StyleSheet.create({
     fontSize: 22
   },
   serviceCol: {
-    flex: 1
+    flex: 1,
+    flexShrink: 1,
+    marginRight: 8
   },
   serviceName: {
     fontSize: 15,
     fontWeight: '700',
-    color: colors.textPrimary
+    color: colors.textPrimary,
+    flexShrink: 1
   },
   serviceAddress: {
     fontSize: 11,
     color: colors.textSecondary,
-    marginTop: 2
+    marginTop: 2,
+    flexShrink: 1
   },
   priceTag: {
     backgroundColor: colors.surfaceSecondary,

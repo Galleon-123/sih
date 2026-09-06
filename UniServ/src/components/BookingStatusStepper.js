@@ -165,11 +165,14 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    gap: 6
   },
   stepTitle: {
     fontSize: 14,
-    fontWeight: '600'
+    fontWeight: '600',
+    flex: 1,
+    flexShrink: 1
   },
   stepTitleCompleted: {
     color: colors.textPrimary

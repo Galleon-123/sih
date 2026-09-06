@@ -23,61 +23,114 @@ const DEFAULT_LANGUAGE = {
   nativeName: 'English'
 };
 
+// Memory fallback store for environments where AsyncStorage is blocked (e.g. Safari private browsing)
+const memoryStorage = {};
+
+const safeGetItem = async (key) => {
+  try {
+    const val = await AsyncStorage.getItem(key);
+    return val !== null ? val : memoryStorage[key] || null;
+  } catch (e) {
+    console.warn(`AsyncStorage.getItem failed for ${key}, falling back to memory:`, e);
+    return memoryStorage[key] || null;
+  }
+};
+
+const safeSetItem = async (key, val) => {
+  memoryStorage[key] = val;
+  try {
+    await AsyncStorage.setItem(key, val);
+  } catch (e) {
+    console.warn(`AsyncStorage.setItem failed for ${key}, saved in memory:`, e);
+  }
+};
+
+const safeRemoveItem = async (key) => {
+  delete memoryStorage[key];
+  try {
+    await AsyncStorage.removeItem(key);
+  } catch (e) {
+    console.warn(`AsyncStorage.removeItem failed for ${key}:`, e);
+  }
+};
+
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(DEFAULT_USER);
   const [language, setLanguageState] = useState(DEFAULT_LANGUAGE);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [bootstrapStage, setBootstrapStage] = useState('Initializing Services...');
 
   // Translation helper reactive to active language code
   const t = (key) => {
     return getTranslation(language?.code || 'en', key);
   };
 
-  // Load saved user state on launch
+  // Robust launch initialization with timeout safety
   useEffect(() => {
+    let isMounted = true;
+
+    // Safety timeout: Never hang bootstrap on any device longer than 1200ms
+    const timeout = setTimeout(() => {
+      if (isMounted && isLoading) {
+        setIsLoading(false);
+      }
+    }, 1200);
+
     const loadStoredData = async () => {
       try {
-        const storedLang = await AsyncStorage.getItem('@uniserv_language');
-        if (storedLang) {
-          setLanguageState(JSON.parse(storedLang));
+        setBootstrapStage('Connecting Cooperative Registry...');
+        const storedLang = await safeGetItem('@uniserv_language');
+        if (storedLang && isMounted) {
+          try {
+            setLanguageState(JSON.parse(storedLang));
+          } catch (err) {
+            console.warn('Failed parsing stored language:', err);
+          }
         }
-        const storedUser = await AsyncStorage.getItem('@uniserv_user');
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+
+        setBootstrapStage('Loading Verified Citizen Session...');
+        const storedUser = await safeGetItem('@uniserv_user');
+        if (storedUser && isMounted) {
+          try {
+            setUser(JSON.parse(storedUser));
+          } catch (err) {
+            console.warn('Failed parsing stored user:', err);
+          }
         }
-        const storedAuth = await AsyncStorage.getItem('@uniserv_is_logged_in');
-        if (storedAuth === 'true') {
+
+        const storedAuth = await safeGetItem('@uniserv_is_logged_in');
+        if (storedAuth === 'true' && isMounted) {
           setIsLoggedIn(true);
         }
       } catch (e) {
-        console.error('Error loading stored user preferences:', e);
+        console.error('Error in UniServ bootstrap loader:', e);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
+
     loadStoredData();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeout);
+    };
   }, []);
 
   const setLanguage = async (newLanguage) => {
     setLanguageState(newLanguage);
-    try {
-      await AsyncStorage.setItem('@uniserv_language', JSON.stringify(newLanguage));
-    } catch (e) {
-      console.error('Error saving language:', e);
-    }
+    await safeSetItem('@uniserv_language', JSON.stringify(newLanguage));
   };
 
   const login = async (phone) => {
     const updatedUser = { ...user, phone: phone || user.phone };
     setUser(updatedUser);
     setIsLoggedIn(true);
-    try {
-      await AsyncStorage.setItem('@uniserv_user', JSON.stringify(updatedUser));
-      await AsyncStorage.setItem('@uniserv_is_logged_in', 'true');
-    } catch (e) {
-      console.error('Error persisting login session:', e);
-    }
+    await safeSetItem('@uniserv_user', JSON.stringify(updatedUser));
+    await safeSetItem('@uniserv_is_logged_in', 'true');
   };
 
   const registerUser = async (profileData) => {
@@ -88,32 +141,20 @@ export const UserProvider = ({ children }) => {
     };
     setUser(updatedUser);
     setIsLoggedIn(true);
-    try {
-      await AsyncStorage.setItem('@uniserv_user', JSON.stringify(updatedUser));
-      await AsyncStorage.setItem('@uniserv_is_logged_in', 'true');
-    } catch (e) {
-      console.error('Error persisting registered user:', e);
-    }
+    await safeSetItem('@uniserv_user', JSON.stringify(updatedUser));
+    await safeSetItem('@uniserv_is_logged_in', 'true');
     return updatedUser;
   };
 
   const logout = async () => {
     setIsLoggedIn(false);
-    try {
-      await AsyncStorage.removeItem('@uniserv_is_logged_in');
-    } catch (e) {
-      console.error('Error clearing session:', e);
-    }
+    await safeRemoveItem('@uniserv_is_logged_in');
   };
 
   const updateUserProfile = async (updates) => {
     const updated = { ...user, ...updates };
     setUser(updated);
-    try {
-      await AsyncStorage.setItem('@uniserv_user', JSON.stringify(updated));
-    } catch (e) {
-      console.error('Error saving profile updates:', e);
-    }
+    await safeSetItem('@uniserv_user', JSON.stringify(updated));
   };
 
   return (
@@ -128,6 +169,8 @@ export const UserProvider = ({ children }) => {
         logout,
         updateUserProfile,
         isLoading,
+        bootstrapStage,
+        setIsLoading,
         t
       }}
     >

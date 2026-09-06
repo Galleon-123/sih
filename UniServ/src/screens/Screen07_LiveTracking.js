@@ -90,10 +90,11 @@ export const Screen07_LiveTracking = ({ route, navigation }) => {
         {!isScheduledOrAdvance ? (
           <View style={styles.mapContainer}>
             <SimulatedMap
+              worker={worker}
               workerName={worker?.name}
               userAddress={activeBooking?.address}
               onArrival={handleArrival}
-              durationSeconds={12}
+              durationMs={12000}
             />
           </View>
         ) : (

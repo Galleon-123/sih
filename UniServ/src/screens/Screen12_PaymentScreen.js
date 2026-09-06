@@ -323,17 +323,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 6
+    paddingVertical: 6,
+    gap: 8
   },
   itemLabel: {
     fontSize: 12,
     color: colors.textPrimary,
-    fontWeight: '500'
+    fontWeight: '500',
+    flex: 1,
+    flexShrink: 1
   },
   itemVal: {
     fontSize: 13,
     fontWeight: '700',
-    color: colors.textPrimary
+    color: colors.textPrimary,
+    flexShrink: 0
   },
   netTotalRow: {
     flexDirection: 'row',

@@ -2,10 +2,13 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useUser } from '../context/UserContext';
 
-// Screens
+// Splash & Onboarding Screens
+import SplashScreen from '../screens/SplashScreen';
 import Screen01_LanguageSelection from '../screens/Screen01_LanguageSelection';
 import Screen02_OTPLogin from '../screens/Screen02_OTPLogin';
 import Screen02_Registration from '../screens/Screen02_Registration';
+
+// Main App Tabs & Features
 import BottomTabNavigator from './BottomTabNavigator';
 import Screen04_ServiceDetail from '../screens/Screen04_ServiceDetail';
 import Screen05_BookingForm from '../screens/Screen05_BookingForm';
@@ -28,7 +31,17 @@ import Screen18_CommunityScreen from '../screens/Screen18_CommunityScreen';
 const Stack = createNativeStackNavigator();
 
 export const AppNavigator = () => {
-  const { isLoggedIn, isLoading } = useUser();
+  const { isLoggedIn, isLoading, bootstrapStage, setIsLoading } = useUser();
+
+  // Show dedicated SplashScreen while bootstrapping preferences/session
+  if (isLoading) {
+    return (
+      <SplashScreen
+        stageText={bootstrapStage || 'Initializing UniServ Hub...'}
+        onSkip={() => setIsLoading(false)}
+      />
+    );
+  }
 
   return (
     <Stack.Navigator
