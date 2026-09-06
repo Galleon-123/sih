@@ -129,6 +129,46 @@ jobs:
           # User App at /app/
           cp -r UniServ/dist/. _site/app/
 
+          # ── Create static fallbacks for Worker deep routes ───
+          for route in "MainTabs" "MainTabs/Home" "MainTabs/Jobs" "MainTabs/Earnings" "MainTabs/Schedule" "MainTabs/Profile" "Home" "Jobs" "Earnings" "Schedule" "Profile" "language" "login" "register" "ekyc" "tracking" "welfare" "insurance" "heatmap"; do
+            mkdir -p "_site/worker/$route"
+            cp _site/worker/index.html "_site/worker/$route/index.html"
+          done
+
+          # ── Create static fallbacks for User App deep routes ─
+          for route in "MainTabs" "MainTabs/Home" "MainTabs/Bookings" "MainTabs/Services" "MainTabs/Profile" "Home" "Bookings" "Services" "Profile" "login" "booking"; do
+            mkdir -p "_site/app/$route"
+            cp _site/app/index.html "_site/app/$route/index.html"
+          done
+
+          # ── Global SPA 404 redirect fallback ────────────────
+          cat > _site/404.html << 'SPA404'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>UniServ — Redirecting...</title>
+            <script>
+              var path = window.location.pathname;
+              var search = window.location.search;
+              var hash = window.location.hash;
+              if (path.indexOf('/sih/worker') !== -1) {
+                window.location.replace('/sih/worker/' + search + hash);
+              } else if (path.indexOf('/sih/app') !== -1) {
+                window.location.replace('/sih/app/' + search + hash);
+              } else if (path.indexOf('/sih/organizer') !== -1) {
+                window.location.replace('/sih/organizer/index.html');
+              } else {
+                window.location.replace('/sih/');
+              }
+            </script>
+          </head>
+          <body>
+            <p style="font-family:sans-serif; text-align:center; margin-top:20%;">Redirecting to UniServ...</p>
+          </body>
+          </html>
+          SPA404
+
           # Landing index at root
           cat > _site/index.html << 'LANDING'
           <!DOCTYPE html>

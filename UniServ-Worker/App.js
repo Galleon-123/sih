@@ -12,7 +12,9 @@ import ErrorBoundary from './src/components/ErrorBoundary';
 const linking = {
   prefixes: [
     'http://localhost:8081',
+    'http://localhost:8081/worker',
     'https://galleon-123.github.io/sih/worker',
+    'https://galleon-123.github.io',
     'uniserv-worker://',
   ],
   config: {
@@ -26,13 +28,13 @@ const linking = {
       AssessmentToken: 'assessment-token',
       PendingVerification: 'pending-verification',
       MainTabs: {
-        path: 'MainTabs',
+        path: '',
         screens: {
-          Home: 'Home',
-          Jobs: 'Jobs',
-          Earnings: 'Earnings',
-          Schedule: 'Schedule',
-          Profile: 'Profile',
+          Home: { path: 'Home', alias: ['MainTabs/Home'] },
+          Jobs: { path: 'Jobs', alias: ['MainTabs/Jobs', 'jobs'] },
+          Earnings: { path: 'Earnings', alias: ['MainTabs/Earnings', 'earnings'] },
+          Schedule: { path: 'Schedule', alias: ['MainTabs/Schedule', 'schedule'] },
+          Profile: { path: 'Profile', alias: ['MainTabs/Profile', 'profile'] },
         },
       },
       ActiveJob: 'active-job',
