@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -31,13 +31,13 @@ export const SimulatedMap = ({
   const effectiveDurationMs = durationMs || (durationSeconds ? durationSeconds * 1000 : 12000);
 
   // Normalize worker object
-  const normalizedWorker = worker || {
+  const normalizedWorker = useMemo(() => worker || ({
     name: workerName || 'Ravi Kumar (Worker)',
     skill: 'Verified Artisan',
     eta_minutes: 6,
     distance_km: 1.2,
     cooperative: 'District Cooperative Federation'
-  };
+  }), [worker, workerName]);
 
   const [mapWidth, setMapWidth] = useState(360);
   const [mapHeight, setMapHeight] = useState(240);
@@ -52,6 +52,12 @@ export const SimulatedMap = ({
   const [hasArrived, setHasArrived] = useState(false);
   const [currentTurn, setCurrentTurn] = useState('Route to customer doorstep calculated');
   const [speed, setSpeed] = useState('32 km/h');
+  const arrivalHandledRef = useRef(false);
+  const onArrivalRef = useRef(onArrival);
+
+  useEffect(() => {
+    onArrivalRef.current = onArrival;
+  }, [onArrival]);
 
   const TURN_BY_TURN_STEPS = [
     { at: 0.0, turn: 'Departed from Lajpat Nagar Artisan Stand', speed: '24 km/h' },
@@ -92,6 +98,7 @@ export const SimulatedMap = ({
 
     progressAnim.setValue(0);
     setHasArrived(false);
+    arrivalHandledRef.current = false;
 
     const animation = Animated.timing(progressAnim, {
       toValue: 1,
@@ -126,12 +133,11 @@ export const SimulatedMap = ({
         }
       }
 
-      if (value >= 0.98 && !hasArrived) {
+      if (value >= 0.98 && !arrivalHandledRef.current) {
+        arrivalHandledRef.current = true;
         setHasArrived(true);
         setCurrentTurn('Arrived at customer doorstep! 🎉');
-        if (onArrival) {
-          onArrival();
-        }
+        onArrivalRef.current?.();
       }
     });
 
@@ -141,21 +147,22 @@ export const SimulatedMap = ({
       progressAnim.removeListener(listenerId);
       animation.stop();
     };
-  }, [autoStart, mode, effectiveDurationMs]);
+  }, [autoStart, mode, effectiveDurationMs, normalizedWorker.distance_km, normalizedWorker.eta_minutes, progressAnim]);
 
   const handleFastForward = () => {
     progressAnim.setValue(1);
+    if (arrivalHandledRef.current) return;
+    arrivalHandledRef.current = true;
     setDistance('0.0');
     setEta(0);
     setHasArrived(true);
     setCurrentTurn('Arrived at customer doorstep! 🎉');
-    if (onArrival) {
-      onArrival();
-    }
+    onArrivalRef.current?.();
   };
 
   const handleResetRoute = () => {
     progressAnim.setValue(0);
+    arrivalHandledRef.current = false;
     setDistance(normalizedWorker?.distance_km || 1.2);
     setEta(normalizedWorker?.eta_minutes || 6);
     setHasArrived(false);
@@ -177,15 +184,18 @@ export const SimulatedMap = ({
   });
 
   const isWorkerAcceptMode = mode === 'worker_accept' || showWorkerAcceptControls;
+  const handleMapLayout = useCallback((e) => {
+    const { width, height } = e.nativeEvent.layout;
+    // React Native Web can emit layout notifications on every animated frame.
+    // Updating state only for real size changes prevents the map tree repainting.
+    if (width > 0 && Math.round(width) !== Math.round(mapWidth)) setMapWidth(width);
+    if (height > 0 && Math.round(height) !== Math.round(mapHeight)) setMapHeight(height);
+  }, [mapHeight, mapWidth]);
 
   return (
     <View
       style={styles.container}
-      onLayout={(e) => {
-        const { width: w, height: h } = e.nativeEvent.layout;
-        if (w > 0) setMapWidth(w);
-        if (h > 0) setMapHeight(h);
-      }}
+      onLayout={handleMapLayout}
     >
       {/* Turn-by-Turn Navigation Header */}
       <View style={styles.navigationHeader}>

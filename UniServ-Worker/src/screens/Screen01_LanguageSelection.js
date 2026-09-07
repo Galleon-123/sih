@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, TextInput
 } from 'react-native';
@@ -12,6 +12,12 @@ export const Screen01_LanguageSelection = ({ navigation }) => {
   const [selected, setSelected] = useState(language || 'en');
   const [search, setSearch] = useState('');
   const [filterTab, setFilterTab] = useState('popular'); // 'popular' | 'all'
+
+  // Keep this screen in sync when it is opened from Profile after a language
+  // was already saved, rather than retaining a stale selection from navigation.
+  useEffect(() => {
+    setSelected(language || 'en');
+  }, [language]);
 
   const filteredLanguages = LANGUAGES.filter((l) => {
     const matchesSearch = !search || 

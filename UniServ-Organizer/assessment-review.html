@@ -167,6 +167,9 @@
 let currentTrade = 'Electrician';
 let criteriaState = {};
 let safetyPenalty = 0;
+const reviewParams = new URLSearchParams(window.location.search);
+const assessmentId = reviewParams.get('assessmentId');
+const workerId = reviewParams.get('workerId');
 
 function loadTrade(trade) {
   currentTrade = trade;
@@ -256,8 +259,17 @@ function recalc() {
   }
 }
 
-function submitDecision(decision) {
+async function submitDecision(decision) {
   const score = document.getElementById('score-display').textContent;
+  const result = decision === 'PASS' ? 'pass' : 'fail';
+  if (assessmentId && workerId && typeof UniServAssessments !== 'undefined') {
+    try {
+      await UniServAssessments.recordResult(assessmentId, workerId, result, Number(score));
+    } catch (error) {
+      alert(`Could not save the assessment result: ${error.message || 'Please try again.'}`);
+      return;
+    }
+  }
   if (decision === 'PASS') {
     alert(`Worker ACCREDITED with score ${score}/100!\nCooperative trade certificate issued and profile activated on live dispatch.`);
   } else {
@@ -268,7 +280,7 @@ function submitDecision(decision) {
 
 document.addEventListener('DOMContentLoaded', () => {
   renderSidebar('assessment');
-  loadTrade('Electrician');
+  loadTrade(reviewParams.get('trade') || 'Electrician');
 });
 </script>
 </body>

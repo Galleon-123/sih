@@ -190,7 +190,7 @@ function renderKanban() {
         <p><strong>Assessor:</strong> ${s.assessor}</p>
       </div>
       <div style="display:flex;justify-content:flex-end;">
-        <button class="btn btn-success btn-sm" onclick="location.href='assessment-review.html'">Conduct Review →</button>
+        <button class="btn btn-success btn-sm" onclick="openAssessmentReview('${s.firestoreId || ''}','${s.id || ''}','${s.trade || ''}')">Conduct Review →</button>
       </div>
     </div>`).join('');
 
@@ -270,7 +270,15 @@ function openAssignModalFor(token) {
   showModal('assignModal');
 }
 
-function handleAssignSlot(e) {
+function openAssessmentReview(assessmentId, workerId, trade) {
+  const params = new URLSearchParams();
+  if (assessmentId) params.set('assessmentId', assessmentId);
+  if (workerId) params.set('workerId', workerId);
+  if (trade) params.set('trade', trade);
+  window.location.href = `assessment-review.html?${params.toString()}`;
+}
+
+async function handleAssignSlot(e) {
   e.preventDefault();
   const token = document.getElementById('assign-worker-select').value;
   const date = document.getElementById('assign-date').value;
@@ -280,10 +288,23 @@ function handleAssignSlot(e) {
   const tokenIdx = ASSESSMENT_TOKENS.findIndex(t => t.token === token);
   if (tokenIdx !== -1) {
     const item = ASSESSMENT_TOKENS.splice(tokenIdx, 1)[0];
+    const assessmentId = item.firestoreId || item.id;
+    try {
+      if (assessmentId && typeof UniServAssessments !== 'undefined') {
+        await UniServAssessments.scheduleAssessment(assessmentId, `${date} ${time}`, assessor);
+      }
+    } catch (error) {
+      ASSESSMENT_TOKENS.splice(tokenIdx, 0, item);
+      renderKanban();
+      alert(`Could not assign the assessment slot: ${error.message || 'Please try again.'}`);
+      return;
+    }
     ASSESSMENT_SCHEDULED.unshift({
       token: item.token,
       name: item.name,
       trade: item.trade,
+      id: item.id,
+      firestoreId: assessmentId,
       date: `${date} ${time}`,
       assessor,
     });
