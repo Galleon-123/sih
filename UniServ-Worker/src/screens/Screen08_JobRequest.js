@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  ScrollView, Modal, Image, Animated
+  ScrollView, Modal, Image, Animated, Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { useJob } from '../context/JobContext';
 import { useWorker } from '../context/WorkerContext';
 import SimulatedMap from '../components/SimulatedMap';
+
+const DEMO_ATTACHMENT_IMAGE = require('../../assets/icon.png');
 
 const DECLINE_REASONS = [
   'Too far away / Traffic congestion',
@@ -42,8 +44,8 @@ export const Screen08_JobRequest = ({ navigation }) => {
       }, 300);
       Animated.loop(
         Animated.sequence([
-          Animated.timing(waveAnim, { toValue: 1.4, duration: 400, useNativeDriver: true }),
-          Animated.timing(waveAnim, { toValue: 0.8, duration: 400, useNativeDriver: true }),
+          Animated.timing(waveAnim, { toValue: 1.4, duration: 400, useNativeDriver: Platform.OS !== 'web' }),
+          Animated.timing(waveAnim, { toValue: 0.8, duration: 400, useNativeDriver: Platform.OS !== 'web' }),
         ])
       ).start();
     } else {
@@ -298,10 +300,10 @@ export const Screen08_JobRequest = ({ navigation }) => {
                   <TouchableOpacity
                     key={att.id}
                     style={styles.photoThumbWrap}
-                    onPress={() => setPreviewImage(att.uri)}
+                    onPress={() => setPreviewImage(att.uri || 'demo')}
                     activeOpacity={0.8}
                   >
-                    <Image source={{ uri: att.uri }} style={styles.photoThumb} />
+                    <Image source={att.uri ? { uri: att.uri } : DEMO_ATTACHMENT_IMAGE} style={styles.photoThumb} />
                     {att.label ? (
                       <View style={styles.thumbLabelBg}>
                         <Text style={styles.thumbLabelText}>{att.label}</Text>
@@ -419,7 +421,7 @@ export const Screen08_JobRequest = ({ navigation }) => {
               <Ionicons name="close" size={26} color="#fff" />
             </TouchableOpacity>
             {previewImage ? (
-              <Image source={{ uri: previewImage }} style={styles.fullImage} resizeMode="contain" />
+              <Image source={previewImage === 'demo' ? DEMO_ATTACHMENT_IMAGE : { uri: previewImage }} style={styles.fullImage} resizeMode="contain" />
             ) : null}
           </View>
         </Modal>

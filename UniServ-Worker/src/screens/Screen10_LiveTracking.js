@@ -93,6 +93,9 @@ export const Screen10_LiveTracking = ({ navigation }) => {
   const [osrmPoints, setOsrmPoints] = useState(null);
 
   useEffect(() => {
+    // The demo route is generated locally on web. It is reliable offline and
+    // avoids a third-party OSRM request resetting/flickering the web map.
+    if (Platform.OS === 'web') return undefined;
     let cancelled = false;
     (async () => {
       try {

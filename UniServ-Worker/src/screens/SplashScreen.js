@@ -5,7 +5,8 @@ import {
   StyleSheet,
   Animated,
   ActivityIndicator,
-  TouchableOpacity
+  TouchableOpacity,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
@@ -19,12 +20,12 @@ export const SplashScreen = ({ onFinish }) => {
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 400,
-        useNativeDriver: true
+        useNativeDriver: Platform.OS !== 'web'
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
         friction: 6,
-        useNativeDriver: true
+        useNativeDriver: Platform.OS !== 'web'
       })
     ]).start();
 
